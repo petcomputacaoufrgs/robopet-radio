@@ -19,15 +19,14 @@ PROTOBUF_FILES =    message_gui_to_ai.pb.o \
 					message_ai_to_sim.pb.o \
 					ssl_client.o \
 					ssl_server.o \
-					udp_netraw.o 
+					udp_netraw.o
 
 SOCKETS_PATH = $(PROTOBUF_PATH)/socket
 
 PROTOBUF_O = $(PROTOBUF_FILES:%=$(PROTOBUF_PATH)/%)
 
-all: simulator
+all: radio
 
-simulator: main.cpp $(AI_OBJECTS) $(PROTOBUF_O)
+radio: main.cpp $(AI_OBJECTS) $(PROTOBUF_O)
 	@echo $@
 	@$(CC) -o $@ $^ $(FLAGS)
-	
