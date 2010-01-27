@@ -30,6 +30,10 @@ PROTOBUF_O = $(PROTOBUF_FILES:%=$(PROTOBUF_PATH)/%)
 
 all: radio
 
-radio: main.cpp $(AI_OBJECTS) $(PROTOBUF_O)
+radio: main.cpp radio.o $(AI_OBJECTS) $(PROTOBUF_O)
 	@echo $@
 	@$(CC) -o $@ $^ $(FLAGS)
+
+radio.o: radio.cpp radio.h
+	@echo $@
+	@$(CC) -c -o $@ $<
