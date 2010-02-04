@@ -20,6 +20,7 @@ PROTOBUF_FILES =    message_gui_to_ai.pb.o \
 					message_sim_to_tracker.pb.o \
 					message_ai_to_sim.pb.o \
 					message_ai_to_tracker.pb.o \
+					message_radio_to_tracker.pb.o \
 					ssl_client.o \
 					ssl_server.o \
 					udp_netraw.o
