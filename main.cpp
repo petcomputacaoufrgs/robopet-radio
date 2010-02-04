@@ -8,6 +8,7 @@
 
 #define PI acos(-1)
 
+RoboCupSSLServer radiototracker(PORT_RADIO_TO_TRACKER, IP_RADIO_TO_TRACKER);
 RoboCupSSLClient aitoradio(PORT_AI_TO_RADIO, IP_AI_TO_RADIO);
 
 int DEBUG = 1;
@@ -25,6 +26,10 @@ typedef struct
 #define NUM_ROBOTS 5
 Robot robots[NUM_ROBOTS];
 Radio radio;
+
+
+void sendToTracker();
+void sendToRobots();
 
 double toRad(float degrees)
 {
@@ -84,6 +89,23 @@ void receive()
 
 void send()
 {
+	sendToTracker();
+	sendToRobots();
+}
+
+void sendToTracker()
+{
+	SSL_WrapperPacket packet;
+	RadioToTracker *radiototrackerPacket = packet.mutable_radiototracker();
+
+	radiototrackerPacket->set_nada(0);
+
+	radiototracker.send(packet);
+	printf("Sent Radio-To-Tracker\n");
+}
+
+void sendToRobots()
+{
 	//TODO: send to the real robots
 	for(int i=0; i<NUM_ROBOTS; i++)
 	{
@@ -108,6 +130,8 @@ int main()
 
 	printf("Press <Enter> to open connection with client...\n");
 	getchar();
+	
+	radiototracker.open();
 	//TODO: connection with the real robots
 	radio.conecta();
 
