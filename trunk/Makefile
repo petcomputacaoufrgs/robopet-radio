@@ -33,7 +33,7 @@ all: radio
 
 radio: main.cpp radio.o $(AI_OBJECTS) $(PROTOBUF_O)
 	@echo $@
-	@$(CC) -o $@ $^ $(FLAGS)
+	@$(CC) -o $@ $^ $(FLAGS) `pkg-config --cflags --libs protobuf`
 
 radio.o: radio.cpp radio.h
 	@echo $@

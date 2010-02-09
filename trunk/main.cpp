@@ -60,7 +60,8 @@ void motionConversion(int robotIndex)
 			max = abs(robots[robotIndex].motorForces[i]);
 	
 	for(int i=0; i<3; i++)
-		robots[robotIndex].motorForces[i] = 30 * robots[robotIndex].motorForces[i] / max;
+		if(max != 0)
+			robots[robotIndex].motorForces[i] = 30 * robots[robotIndex].motorForces[i] / max;
 
 	robots[robotIndex].motorForces[3] = 0;
 }
