@@ -12,6 +12,7 @@ RoboCupSSLServer radiototracker(PORT_RADIO_TO_TRACKER, IP_RADIO_TO_TRACKER);
 RoboCupSSLClient aitoradio(PORT_AI_TO_RADIO, IP_AI_TO_RADIO);
 
 int DEBUG = 1;
+int robot_total;
 
 typedef struct
 {
@@ -21,6 +22,7 @@ typedef struct
 	int kick;
 	int drible;
 	int motorForces[4];
+	int id;
 } Robot;
 
 #define NUM_ROBOTS 5
@@ -53,12 +55,12 @@ void motionConversion(int robotIndex)
 			robots[robotIndex].motorForces[i] += motionMatrix[i][j] * robotInfo[j];
 		}
 	}
-	
+
 	int max = -99999;
 	for(int i=0; i<3; i++)
 		if(abs(robots[robotIndex].motorForces[i]) > max)
 			max = abs(robots[robotIndex].motorForces[i]);
-	
+
 	for(int i=0; i<3; i++)
 		if(max != 0)
 			robots[robotIndex].motorForces[i] = 30 * robots[robotIndex].motorForces[i] / max;
@@ -73,6 +75,8 @@ void receive()
 	if (aitoradio.receive(packet) && packet.has_aitoradio()) {
 		printf("----------------------------");
 		printf("Received AI-To-Radio!\n");
+
+		robot_total = packet.aitoradio().robots_size();
 		for(int i=0; i<packet.aitoradio().robots_size() && i<NUM_ROBOTS; i++)
 		{
 			robots[i].displacement_x = packet.aitoradio().robots(i).displacement_x();
@@ -80,9 +84,10 @@ void receive()
 			robots[i].displacement_theta = packet.aitoradio().robots(i).displacement_theta();
 			robots[i].kick = packet.aitoradio().robots(i).kick();
 			robots[i].drible = packet.aitoradio().robots(i).drible();
+			robots[i].id = packet.aitoradio().robots(i).id();
 			if(DEBUG)
-				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].displacement_x, 
-																	robots[i].displacement_y, robots[i].displacement_theta, 
+				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].displacement_x,
+																	robots[i].displacement_y, robots[i].displacement_theta,
 																	robots[i].kick, robots[i].drible);
 		}
 	}
@@ -108,18 +113,20 @@ void sendToTracker()
 void sendToRobots()
 {
 	//TODO: send to the real robots
-	for(int i=0; i<NUM_ROBOTS; i++)
+	for(int i=0; i < robot_total; i++)
 	{
 		motionConversion(i);
 		if(DEBUG)
 		{
-			printf("%d = ", i);
+			printf("%d = ", robots[i].id+1);
 			for(int j=0; j<3; j++)
 				printf("motor(%d): %d - ", j, robots[i].motorForces[j]);
 			printf("\n");
 		}
+		printf("                       \n                               \n");
+
 		//robotNumber, motorForces, drible, kick
-		radio.send(i+1, robots[i].motorForces, robots[i].drible, robots[i].kick);
+		radio.send(robots[i].id+1, robots[i].motorForces, robots[i].drible, robots[i].kick);
 	}
 }
 
@@ -131,13 +138,17 @@ int main()
 
 	printf("Press <Enter> to open connection with client...\n");
 	getchar();
-	
+
 	radiototracker.open();
 	//TODO: connection with the real robots
 	radio.conecta();
 
+
+	clrscr();
 	while(1) {
+		rewindscr();
 		receive();
 		send();
 	}
 }
+
