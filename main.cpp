@@ -40,6 +40,7 @@ double toRad(float degrees)
 
 void motionConversion(int robotIndex)
 {
+    int motor_index_mask[] = {2, 0, 1};
 	static double motionMatrix[3][3] = {{-sin(toRad(60)), -sin(toRad(30)), -1},
 										{0				,	1			 , -1},
 										{sin(toRad(60))	, -sin(toRad(30)), -1}};
@@ -50,9 +51,9 @@ void motionConversion(int robotIndex)
 	robotInfo[2] = robots[robotIndex].displacement_theta;
 
 	for(int i = 0; i < 3; i++) {
-		robots[robotIndex].motorForces[i] = 0;
+		robots[robotIndex].motorForces[motor_index_mask[i]] = 0;
 		for(int j = 0; j < 3; j++) {
-			robots[robotIndex].motorForces[i] += motionMatrix[i][j] * robotInfo[j];
+			robots[robotIndex].motorForces[motor_index_mask[i]] += motionMatrix[i][j] * robotInfo[j];
 		}
 	}
 
@@ -73,8 +74,8 @@ void receive()
 {
 	SSL_WrapperPacket packet;
 	if (aitoradio.receive(packet) && packet.has_aitoradio()) {
-		printf("----------------------------");
-		printf("Received AI-To-Radio!\n");
+		//printf("----------------------------");
+		//printf("Received AI-To-Radio!\n");
 
 		robot_total = packet.aitoradio().robots_size();
 		for(int i=0; i<packet.aitoradio().robots_size() && i<NUM_ROBOTS; i++)
@@ -123,11 +124,51 @@ void sendToRobots()
 				printf("motor(%d): %d - ", j, robots[i].motorForces[j]);
 			printf("\n");
 		}
-		printf("                       \n                               \n");
+		printf("                                                                     \n \
+		                                                                             \n");
 
 		//robotNumber, motorForces, drible, kick
 		radio.send(robots[i].id+1, robots[i].motorForces, robots[i].drible, robots[i].kick);
 	}
+}
+
+void remoteControl()
+{
+    int robot=1;
+    printf("Robot Number [1-5]: ");
+    scanf("%d", &robot);
+    robot_total = 1;
+    while(1)
+    {
+        int x, y;
+        char c;
+        fflush(stdin);
+        scanf(" %c", &c);
+        printf("-> %c\n", c);
+        switch(c)
+        {
+            case '8': x = 1;
+                      y = 0;
+                      break;
+            case '4': x = 0;
+                      y = -1;
+                      break;
+            case '6': x = 0;
+                      y = 1;
+                      break;
+            case '2': x = -1;
+                      y = 0;
+                      break;
+            case '5': x = 0;
+                      y = 0;
+                      break;
+        }
+        robots[0].displacement_x = x;
+        robots[0].displacement_y = y;
+        robots[0].displacement_theta = 0;
+        robots[0].id = robot-1;
+        send();
+    }
 }
 
 int main()
@@ -143,6 +184,7 @@ int main()
 	//TODO: connection with the real robots
 	radio.conecta();
 
+    remoteControl();
 
 	clrscr();
 	while(1) {
