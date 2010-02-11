@@ -45,22 +45,26 @@ bool inerciaBreaker = false;
 int inerciaCount = 0;
 int motor_index_mask[] = {2, 0, 1};
 
+
+int CLOCK_WISE_VELOCITY = 15,
+    COUNTER_CLOCK_WISE_VELOCITY = 16,
+    MIN_DIFF = 30;
+
 void giraAnda(int robotIndex)
 {
-    int i =robotIndex;
-				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].displacement_x,
-																	robots[i].displacement_y, robots[i].displacement_theta,
-																	robots[i].kick, robots[i].drible);
-    float MIN_DIFF = 30;
+//    int i =robotIndex;
+//				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].displacement_x,
+//																	robots[i].displacement_y, robots[i].displacement_theta,
+//																	robots[i].kick, robots[i].drible);
+    //float MIN_DIFF = 30; //now global
 
-    printf("(%f, %f)\n", Vector(1.2, 0.2).getX(), Vector(1.4, 4.0).getY());
+    //printf("(%f, %f)\n", Vector(1.2, 0.2).getX(), Vector(1.4, 4.0).getY());
 
     Vector desl(robots[robotIndex].displacement_x, robots[robotIndex].displacement_y);
 
-    printf("desl(%f, %f)\n", desl.getX(), desl.getY());
+    //printf("desl(%f, %f)\n", desl.getX(), desl.getY());
 
     printf("angleClockwise: %lf\n", desl.angleClockwise());
-#define TURN_VELOCITY 20
     if(desl.angleClockwise() < MIN_DIFF || desl.angleClockwise() > 360 - MIN_DIFF)
     {
         printf("ahead!\n");
@@ -72,13 +76,13 @@ void giraAnda(int robotIndex)
     {
         printf("turning clockwise...\n");
         for(int i=0; i<3; i++)
-            robots[robotIndex].motorForces[i] = TURN_VELOCITY;
+            robots[robotIndex].motorForces[i] = -CLOCK_WISE_VELOCITY;
     }
     else
     {
         printf("turning counterclockwise...\n");
         for(int i=0; i<3; i++)
-            robots[robotIndex].motorForces[i] = -TURN_VELOCITY;
+            robots[robotIndex].motorForces[i] = COUNTER_CLOCK_WISE_VELOCITY;
     }
 
     robots[robotIndex].motorForces[3] = 0;
@@ -295,6 +299,13 @@ int main(int argc, char **argv)
     if(argc > 1) {
         robot_remote_control = atoi(argv[1]);
         printf("robot_remote_control set to %i\n", robot_remote_control);
+        if(argc > 4) {
+            CLOCK_WISE_VELOCITY = atoi(argv[2]);
+            COUNTER_CLOCK_WISE_VELOCITY = atoi(argv[3]);
+            MIN_DIFF = atoi(argv[4]);
+            printf("CLOCK_WISE_VELOCITY: %i\nCOUNTER_CLOCK_WISE_VELOCITY: %i\nMIN_DIFF = %i\n",
+            CLOCK_WISE_VELOCITY, COUNTER_CLOCK_WISE_VELOCITY, MIN_DIFF);
+        }
     } else {
         robot_remote_control = 0;
     }
@@ -312,7 +323,7 @@ int main(int argc, char **argv)
 
 	clrscr();
 	int scrCount = 0;
-	while(1) {
+	while(!kbhit()) {
 	    scrCount++;
 	    if(scrCount == SCR_CLEAR_DELAY) {
 	        scrCount = 0;
@@ -321,6 +332,17 @@ int main(int argc, char **argv)
 		rewindscr();
 		receive();
 		send();
+	}
+    while(1) {
+        printf("mandando os robos pararem ...\n");
+	    for(int i=0; i < robot_total; i++)
+	    {
+			    for(int j=0; j<3; j++)
+				    robots[i].motorForces[j] = 0;
+
+            for(int k = 0; k < 1000; k++)
+		        radio.send(robots[i].id+1, robots[i].motorForces, robots[i].drible, robots[i].kick);
+	    }
 	}
 }
 
