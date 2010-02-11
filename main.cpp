@@ -1,10 +1,13 @@
 #include <stdio.h>
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <math.h>
 
 #include "ssl_client.h"
 #include "ssl_server.h"
 #include "radio.h"
-
-#include <math.h>
+#include "vector.h"
 
 #define PI acos(-1)
 
@@ -35,7 +38,7 @@ void sendToRobots();
 
 double toRad(float degrees)
 {
-	return (degrees * PI) /180;
+	return (degrees * 3.1415) / (float) 180;
 }
 
 void motionConversion(int robotIndex)
@@ -44,27 +47,51 @@ void motionConversion(int robotIndex)
 	static double motionMatrix[3][3] = {{-sin(toRad(60)), -sin(toRad(30)), -1},
 										{0				,	1			 , -1},
 										{sin(toRad(60))	, -sin(toRad(30)), -1}};
-	static double robotInfo[3];
+	double robotInfo[3], acum[3];
+
+    //printf("toRad(60): %lf", toRad(60));
+    //printf("sin(toRad(60)): %lf", sin(toRad(60)));
 
 	robotInfo[0] = robots[robotIndex].displacement_x;
 	robotInfo[1] = robots[robotIndex].displacement_y;
 	robotInfo[2] = robots[robotIndex].displacement_theta;
+/*
+	for(int i = 0; i < 3; i++) {
+	    printf("robotInfo[%i]: %lf\n", i, robotInfo[i]);
+	}//*/
 
 	for(int i = 0; i < 3; i++) {
-		robots[robotIndex].motorForces[motor_index_mask[i]] = 0;
+		acum[i] = 0;
 		for(int j = 0; j < 3; j++) {
-			robots[robotIndex].motorForces[motor_index_mask[i]] += motionMatrix[i][j] * robotInfo[j];
+			acum[i] += motionMatrix[i][j] * robotInfo[j];
 		}
 	}
+/*
+    for(int i = 0; i < 3; i++) {
+        printf("acum[%i]: %lf\n", i, acum[i]);
+    }//*/
 
-	int max = -99999;
+	double max = -99999;
 	for(int i=0; i<3; i++)
-		if(abs(robots[robotIndex].motorForces[i]) > max)
-			max = abs(robots[robotIndex].motorForces[i]);
+		if(fabs(acum[i]) > max)
+			max = fabs(acum[i]);
+
+    //printf("max: %lf\n", max);
 
 	for(int i=0; i<3; i++)
 		if(max != 0)
-			robots[robotIndex].motorForces[i] = 30 * robots[robotIndex].motorForces[i] / max;
+			acum[i] = 30 * acum[i] / (float) max;
+/*
+    for(int i = 0; i < 3; i++) {
+        printf("acum[%i]: %lf\n", i, acum[i]);
+    }//*/
+
+    for(int i = 0; i < 3; i++)
+        robots[robotIndex].motorForces[motor_index_mask[i]] = acum[i];
+/*
+    for(int i = 0; i < 3; i++) {
+        printf("robots[%i].motorForces[%i]: %i\n", robotIndex, i, robots[robotIndex].motorForces[i]);
+    }//*/
 
 	robots[robotIndex].motorForces[3] = 0;
 }
@@ -132,43 +159,76 @@ void sendToRobots()
 	}
 }
 
+int kbhit(void)
+{
+  struct termios oldt, newt;
+  int ch;
+  int oldf;
+
+  tcgetattr(STDIN_FILENO, &oldt);
+  newt = oldt;
+  newt.c_lflag &= ~(ICANON | ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+  oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+  fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+
+  ch = getchar();
+
+  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+  fcntl(STDIN_FILENO, F_SETFL, oldf);
+
+  if(ch != EOF)
+  {
+    ungetc(ch, stdin);
+    return 1;
+  }
+
+  return 0;
+}
+
 void remoteControl()
 {
-    int robot=1;
+#define TIMES_SEND 100
+    int robot=5;
     printf("Robot Number [1-5]: ");
-    scanf("%d", &robot);
+    //scanf("%d", &robot);
+    printf("robot: %i\n", robot);
     robot_total = 1;
-    while(1)
-    {
-        int x, y;
-        char c;
-        fflush(stdin);
-        scanf(" %c", &c);
-        printf("-> %c\n", c);
-        switch(c)
+    robots[0].id = robot-1;
+    robots[0].drible = 0;
+    robots[0].kick = 0;
+    robots[0].displacement_x = 0;
+    robots[0].displacement_y = 0;
+    robots[0].displacement_theta = 0;
+
+    char c;
+    while(1) {
+        while(!kbhit())
         {
-            case '8': x = 1;
-                      y = 0;
-                      break;
-            case '4': x = 0;
-                      y = -1;
-                      break;
-            case '6': x = 0;
-                      y = 1;
-                      break;
-            case '2': x = -1;
-                      y = 0;
-                      break;
-            case '5': x = 0;
-                      y = 0;
-                      break;
+            send();
         }
-        robots[0].displacement_x = x;
-        robots[0].displacement_y = y;
-        robots[0].displacement_theta = 0;
-        robots[0].id = robot-1;
-        send();
+        fflush(stdin);
+        scanf(" %1c", &c);
+        printf("-> %c\n", c);
+        Vector v(1, 0);
+        int rotation[] = {0, 240, 180, 120, 270, 0, 90, 300, 0, 60};
+#define CHAR_TO_DIGIT(x) ((x) - '0')
+        if('1' <= c && c <= '9') {
+            v.rotate(rotation[CHAR_TO_DIGIT(c)]);
+        } else if(c == '0') {
+            v = Vector(0, 0);
+        }
+        robots[0].displacement_x = v.getX();
+        robots[0].displacement_y = v.getY();
     }
+}
+
+int amain(void)
+{
+  while(!kbhit())
+    puts("Press a key!");
+  printf("You pressed '%c'!\n", getchar());
+  return 0;
 }
 
 int main()
@@ -184,10 +244,16 @@ int main()
 	//TODO: connection with the real robots
 	radio.conecta();
 
-    remoteControl();
+    //remoteControl();
 
 	clrscr();
+	int scrCount = 0;
 	while(1) {
+	    scrCount++;
+	    if(scrCount == SCR_CLEAR_DELAY) {
+	        scrCount = 0;
+	        clrscr();
+	    }
 		rewindscr();
 		receive();
 		send();
