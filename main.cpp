@@ -94,6 +94,12 @@ void motionConversion(int robotIndex)
     }//*/
 
 	robots[robotIndex].motorForces[3] = 0;
+
+	//quebra-inércia
+	if(!(rand() % 10)) {
+	    for(int i = 0; i < 3; i++)
+	        robots[robotIndex].motorForces[i] = 30;
+	}
 }
 
 
