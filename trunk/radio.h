@@ -8,6 +8,7 @@
 #include <sys/signal.h>
 #include <sys/types.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #define BAUDTTY B38400
 #define MODEMDEVICE "/dev/ttyUSB0"
@@ -37,19 +38,27 @@ const int NUM_DATABITS = 4;
 const int databitsKeys[] = {5, 6, 7, 8};
 const long databitsValues[] = {CS5, CS6, CS7, CS8};
 
+void *wrapper(void *r);
 class Radio
 {
 	public:
-		Radio(){};
+		Radio() {
+		    //pthread_init(thread, NULL);
+		    pthread_create(&thread, NULL, wrapper, (void *)this);
+		};
 		~Radio(){};
 		void conecta(const char* device="/dev/ttyUSB0", const int baud=9600,
 					const int databits=8, const int stopbits=0, const int parity=0);
 		void send(const int robotNumber, int* motorForces, const int drible, const int kick);
+        void realSend();
 
 	private:
+	    pthread_t thread;
 		int fd;
-		void coloca_na_string(char aux[7+NUMMOTORES],int nrobo, int fm[NUMMOTORES],
+		char message[400];
+		void coloca_na_string(char *aux, int nrobo, int *fm,
 														int drible, int kick);
 };
 
 #endif
+
