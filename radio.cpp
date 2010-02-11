@@ -1,5 +1,13 @@
 #include "radio.h"
 
+void *wrapper(void *r)
+{
+    Radio *radio = (Radio *) r;
+    while(1) {
+        radio->realSend();
+    }
+}
+
 int meu_pow(int a, int b)
 {
 	int x;
@@ -20,7 +28,7 @@ void signal_handler_IO (int status)
    int wait_flag = 0;
 }
 
-void Radio::coloca_na_string(char aux[7+NUMMOTORES],int nrobo, int fm[NUMMOTORES], int drible, int kick)
+void Radio::coloca_na_string(char* aux,int nrobo, int* fm, int drible, int kick)
 {
 	unsigned int i,x;
 	unsigned char aux2;
@@ -119,6 +127,7 @@ void Radio::conecta(const char* device, const int baud, const int databits,
 
 	//open the device(com port) to be non-blocking (read will return immediately)
 	if ((fd = open(device, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
+	//if ((fd = open(device, O_WRONLY | O_NOCTTY | O_NONBLOCK)) < 0) {
 		perror(device);
 		//return -1;
 	}
@@ -150,8 +159,14 @@ void Radio::conecta(const char* device, const int baud, const int databits,
 
 void Radio::send(const int robotNumber, int* motorForces, const int drible, const int kick)
 {
-	int x;
-	char message[500];
+	//char message[500]; //moved to the class
 	coloca_na_string(message, robotNumber, motorForces, drible, kick);
-    x=write(fd, message, 2+NUMMOTORES+5);
+    //write(fd, message, 2+NUMMOTORES+5); //moved to realSend
 }
+
+void Radio::realSend()
+{
+    //printf(".");
+    write(fd, message, 2+NUMMOTORES+5);
+}
+

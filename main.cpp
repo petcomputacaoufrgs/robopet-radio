@@ -41,9 +41,51 @@ double toRad(float degrees)
 	return (degrees * 3.1415) / (float) 180;
 }
 
+bool inerciaBreaker = false;
+int inerciaCount = 0;
+int motor_index_mask[] = {2, 0, 1};
+
+void giraAnda(int robotIndex)
+{
+    int i =robotIndex;
+				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].displacement_x,
+																	robots[i].displacement_y, robots[i].displacement_theta,
+																	robots[i].kick, robots[i].drible);
+    float MIN_DIFF = 30;
+
+    printf("(%f, %f)\n", Vector(1.2, 0.2).getX(), Vector(1.4, 4.0).getY());
+
+    Vector desl(robots[robotIndex].displacement_x, robots[robotIndex].displacement_y);
+
+    printf("desl(%f, %f)\n", desl.getX(), desl.getY());
+
+    printf("angleClockwise: %lf\n", desl.angleClockwise());
+#define TURN_VELOCITY 20
+    if(desl.angleClockwise() < MIN_DIFF || desl.angleClockwise() > 360 - MIN_DIFF)
+    {
+        printf("ahead!\n");
+        robots[robotIndex].motorForces[0] = 0;
+        robots[robotIndex].motorForces[1] = 30;
+        robots[robotIndex].motorForces[2] = -30;
+    }
+    else if(desl.angleClockwise() > MIN_DIFF && desl.angleClockwise() < 180)
+    {
+        printf("turning clockwise...\n");
+        for(int i=0; i<3; i++)
+            robots[robotIndex].motorForces[i] = TURN_VELOCITY;
+    }
+    else
+    {
+        printf("turning counterclockwise...\n");
+        for(int i=0; i<3; i++)
+            robots[robotIndex].motorForces[i] = -TURN_VELOCITY;
+    }
+
+    robots[robotIndex].motorForces[3] = 0;
+}
+
 void motionConversion(int robotIndex)
 {
-    int motor_index_mask[] = {2, 0, 1};
 	static double motionMatrix[3][3] = {{-sin(toRad(60)), -sin(toRad(30)), -1},
 										{0				,	1			 , -1},
 										{sin(toRad(60))	, -sin(toRad(30)), -1}};
@@ -96,10 +138,19 @@ void motionConversion(int robotIndex)
 	robots[robotIndex].motorForces[3] = 0;
 
 	//quebra-inércia
-	if(!(rand() % 10)) {
+#ifdef QUEBRA_INERCIA
+	if(!(rand() % 10) && !inerciaBreaker) {
+	    inerciaBreaker = true;
+	    inerciaCount = 10;
+	}
+
+	if(inerciaBreaker && inerciaCount--) {
 	    for(int i = 0; i < 3; i++)
 	        robots[robotIndex].motorForces[i] = 30;
 	}
+
+	if(!inerciaCount) inerciaBreaker = false;
+#endif
 }
 
 
@@ -119,7 +170,7 @@ void receive()
 			robots[i].kick = packet.aitoradio().robots(i).kick();
 			robots[i].drible = packet.aitoradio().robots(i).drible();
 			robots[i].id = packet.aitoradio().robots(i).id();
-			if(DEBUG)
+			if(DEBUG && false)
 				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].displacement_x,
 																	robots[i].displacement_y, robots[i].displacement_theta,
 																	robots[i].kick, robots[i].drible);
@@ -129,7 +180,7 @@ void receive()
 
 void send()
 {
-	sendToTracker();
+	//sendToTracker();
 	sendToRobots();
 }
 
@@ -148,9 +199,13 @@ void sendToRobots()
 {
 	for(int i=0; i < robot_total; i++)
 	{
-		motionConversion(i);
+	    giraAnda(i);
+		//motionConversion(i);
 		if(DEBUG)
 		{
+				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].displacement_x,
+																	robots[i].displacement_y, robots[i].displacement_theta,
+																	robots[i].kick, robots[i].drible);
 			printf("%d = ", robots[i].id+1);
 			for(int j=0; j<3; j++)
 				printf("motor(%d): %d - ", j, robots[i].motorForces[j]);
