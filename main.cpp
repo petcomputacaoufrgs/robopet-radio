@@ -15,7 +15,7 @@ RoboCupSSLServer radiototracker(PORT_RADIO_TO_TRACKER, IP_RADIO_TO_TRACKER);
 RoboCupSSLClient aitoradio(PORT_AI_TO_RADIO, IP_AI_TO_RADIO);
 
 int DEBUG = 1;
-int robot_total;
+int robot_total, robot_remote_control;
 
 typedef struct
 {
@@ -140,7 +140,6 @@ void sendToTracker()
 
 void sendToRobots()
 {
-	//TODO: send to the real robots
 	for(int i=0; i < robot_total; i++)
 	{
 		motionConversion(i);
@@ -189,12 +188,9 @@ int kbhit(void)
 void remoteControl()
 {
 #define TIMES_SEND 100
-    int robot=5;
-    printf("Robot Number [1-5]: ");
-    //scanf("%d", &robot);
-    printf("robot: %i\n", robot);
+    printf("robot: %i\n", robot_remote_control);
     robot_total = 1;
-    robots[0].id = robot-1;
+    robots[0].id = robot_remote_control - 1;
     robots[0].drible = 0;
     robots[0].kick = 0;
     robots[0].displacement_x = 0;
@@ -231,9 +227,16 @@ int amain(void)
   return 0;
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	printf("Radio Running!\n");
+
+    if(argc > 1) {
+        robot_remote_control = atoi(argv[1]);
+        printf("robot_remote_control set to %i\n", robot_remote_control);
+    } else {
+        robot_remote_control = 0;
+    }
 
 	aitoradio.open(false);
 
@@ -241,10 +244,10 @@ int main()
 	getchar();
 
 	radiototracker.open();
-	//TODO: connection with the real robots
 	radio.conecta();
 
-    //remoteControl();
+    if(robot_remote_control)
+        remoteControl();
 
 	clrscr();
 	int scrCount = 0;
