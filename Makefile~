@@ -10,7 +10,7 @@ COMMUNICATION_PATH = ../robopet-communication/
 COMMUNICATION_H = $(COMMUNICATION_PATH)/packets
 COMMUNICATION_LIB = $(COMMUNICATION_PATH)/communication.a
 
-SOCKETS_PATH = $(COMMUNICATION_PATH)/socket
+SOCKETS_PATH = $(PROTOBUF_PATH)/socket
 
 all: radio
 
