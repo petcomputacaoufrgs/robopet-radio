@@ -4,15 +4,15 @@
 #include <fcntl.h>
 #include <math.h>
 
-#include "ssl_client.h"
-#include "ssl_server.h"
+#include "rp_client.h"
+#include "rp_server.h"
 #include "radio.h"
 #include "vector.h"
 
 #define PI acos(-1)
 
-RoboCupSSLServer radiototracker(PORT_RADIO_TO_TRACKER, IP_RADIO_TO_TRACKER);
-RoboCupSSLClient aitoradio(PORT_AI_TO_RADIO, IP_AI_TO_RADIO);
+RoboPETServer radiototracker(PORT_RADIO_TO_TRACKER, IP_RADIO_TO_TRACKER);
+RoboPETClient aitoradio(PORT_AI_TO_RADIO, IP_AI_TO_RADIO);
 
 int DEBUG = 1;
 int robot_total, robot_remote_control;
@@ -160,7 +160,7 @@ void motionConversion(int robotIndex)
 
 void receive()
 {
-	SSL_WrapperPacket packet;
+	RoboPET_WrapperPacket packet;
 	if (aitoradio.receive(packet) && packet.has_aitoradio()) {
 		//printf("----------------------------");
 		//printf("Received AI-To-Radio!\n");
@@ -190,7 +190,7 @@ void send()
 
 void sendToTracker()
 {
-	SSL_WrapperPacket packet;
+	RoboPET_WrapperPacket packet;
 	RadioToTracker *radiototrackerPacket = packet.mutable_radiototracker();
 
 	radiototrackerPacket->set_nada(0);
