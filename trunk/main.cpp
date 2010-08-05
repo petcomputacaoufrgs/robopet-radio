@@ -19,8 +19,8 @@ int robot_total, robot_remote_control;
 
 typedef struct
 {
-	float displacement_x;
-	float displacement_y;
+	float force_x;
+	float force_y;
 	float displacement_theta;
 	int kick;
 	int drible;
@@ -60,7 +60,7 @@ void giraAnda(int robotIndex)
 
     //printf("(%f, %f)\n", Vector(1.2, 0.2).getX(), Vector(1.4, 4.0).getY());
 
-    Vector desl(robots[robotIndex].displacement_x, robots[robotIndex].displacement_y);
+    Vector desl(robots[robotIndex].force_x, robots[robotIndex].force_y);
 
     //printf("desl(%f, %f)\n", desl.getX(), desl.getY());
 
@@ -98,8 +98,8 @@ void motionConversion(int robotIndex)
     //printf("toRad(60): %lf", toRad(60));
     //printf("sin(toRad(60)): %lf", sin(toRad(60)));
 
-	robotInfo[0] = robots[robotIndex].displacement_x;
-	robotInfo[1] = robots[robotIndex].displacement_y;
+	robotInfo[0] = robots[robotIndex].force_x;
+	robotInfo[1] = robots[robotIndex].force_y;
 	robotInfo[2] = robots[robotIndex].displacement_theta;
 /*
 	for(int i = 0; i < 3; i++) {
@@ -168,15 +168,15 @@ void receive()
 		robot_total = packet.aitoradio().robots_size();
 		for(int i=0; i<packet.aitoradio().robots_size() && i<NUM_ROBOTS; i++)
 		{
-			robots[i].displacement_x = packet.aitoradio().robots(i).displacement_x();
-			robots[i].displacement_y = packet.aitoradio().robots(i).displacement_y();
+			robots[i].force_x = packet.aitoradio().robots(i).displacement_x();
+			robots[i].force_y = packet.aitoradio().robots(i).displacement_y();
 			robots[i].displacement_theta = packet.aitoradio().robots(i).displacement_theta();
 			robots[i].kick = packet.aitoradio().robots(i).kick();
 			robots[i].drible = packet.aitoradio().robots(i).drible();
 			robots[i].id = packet.aitoradio().robots(i).id();
 			if(DEBUG && false)
-				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].displacement_x,
-																	robots[i].displacement_y, robots[i].displacement_theta,
+				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].force_x,
+																	robots[i].force_y, robots[i].displacement_theta,
 																	robots[i].kick, robots[i].drible);
 		}
 	}
@@ -207,8 +207,8 @@ void sendToRobots()
 		//motionConversion(i);
 		if(DEBUG)
 		{
-				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].displacement_x,
-																	robots[i].displacement_y, robots[i].displacement_theta,
+				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].force_x,
+																	robots[i].force_y, robots[i].displacement_theta,
 																	robots[i].kick, robots[i].drible);
 			printf("%d = ", robots[i].id+1);
 			for(int j=0; j<3; j++)
@@ -258,8 +258,8 @@ void remoteControl()
     robots[0].id = robot_remote_control - 1;
     robots[0].drible = 0;
     robots[0].kick = 0;
-    robots[0].displacement_x = 0;
-    robots[0].displacement_y = 0;
+    robots[0].force_x = 0;
+    robots[0].force_y = 0;
     robots[0].displacement_theta = 0;
 
     char c;
@@ -279,8 +279,8 @@ void remoteControl()
         } else if(c == '0') {
             v = Vector(0, 0);
         }
-        robots[0].displacement_x = v.getX();
-        robots[0].displacement_y = v.getY();
+        robots[0].force_x = v.getX();
+        robots[0].force_y = v.getY();
     }
 }
 
