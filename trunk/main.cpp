@@ -11,7 +11,8 @@
 
 #define PI acos(-1)
 
-RoboPETServer radiototracker(PORT_RADIO_TO_TRACKER, IP_RADIO_TO_TRACKER);
+//RoboPETServer radiototracker(PORT_RADIO_TO_TRACKER, IP_RADIO_TO_TRACKER);
+RoboPETServer radiotosim(PORT_RADIO_TO_SIM, IP_RADIO_TO_SIM);
 RoboPETClient aitoradio(PORT_AI_TO_RADIO, IP_AI_TO_RADIO);
 
 int DEBUG = 1;
@@ -162,8 +163,8 @@ void receive()
 {
 	RoboPET_WrapperPacket packet;
 	if (aitoradio.receive(packet) && packet.has_aitoradio()) {
-		//printf("----------------------------");
-		//printf("Received AI-To-Radio!\n");
+		printf("----------------------------");
+		printf("Received AI-To-Radio!\n");
 
 		robot_total = packet.aitoradio().robots_size();
 		for(int i=0; i<packet.aitoradio().robots_size() && i<NUM_ROBOTS; i++)
@@ -174,20 +175,16 @@ void receive()
 			robots[i].kick = packet.aitoradio().robots(i).kick();
 			robots[i].drible = packet.aitoradio().robots(i).drible();
 			robots[i].id = packet.aitoradio().robots(i).id();
-			if(DEBUG && false)
-				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].force_x,
+			if(DEBUG)
+				printf("RECEIVE Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].force_x,
 																	robots[i].force_y, robots[i].displacement_theta,
 																	robots[i].kick, robots[i].drible);
 		}
 	}
 }
 
-void send()
-{
-	//sendToTracker();
-	sendToRobots();
-}
 
+/*
 void sendToTracker()
 {
 	RoboPET_WrapperPacket packet;
@@ -197,17 +194,43 @@ void sendToTracker()
 
 	radiototracker.send(packet);
 	printf("Sent Radio-To-Tracker\n");
+}*/
+
+void sendToSim()
+{
+	RoboPET_WrapperPacket packet;
+	RadioToSim *radiotosimPacket = packet.mutable_radiotosim();
+
+	for(int i=0; i < robot_total; i++) {
+		RadioToSim::Robot *r1 = radiotosimPacket->add_yellow_robots();
+       	r1->set_force_x( robots[i].force_x );
+		r1->set_force_y( robots[i].force_y );
+		r1->set_displacement_theta( robots[i].displacement_theta );
+		r1->set_kick( robots[i].kick );
+		r1->set_drible( robots[i].drible );
+	}
+
+	radiotosim.send(packet);
+	printf("Sent Radio-To-Simulator\n");
 }
+
+void send()
+{
+	//sendToTracker();
+	sendToSim();
+	sendToRobots();
+}
+
 
 void sendToRobots()
 {
 	for(int i=0; i < robot_total; i++)
 	{
 	    giraAnda(i);
-		//motionConversion(i);
+		motionConversion(i);
 		if(DEBUG)
 		{
-				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].force_x,
+				printf("SENDING Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].force_x,
 																	robots[i].force_y, robots[i].displacement_theta,
 																	robots[i].kick, robots[i].drible);
 			printf("%d = ", robots[i].id+1);
@@ -315,7 +338,8 @@ int main(int argc, char **argv)
 	printf("Press <Enter> to open connection with client...\n");
 	getchar();
 
-	radiototracker.open();
+	//radiototracker.open();
+	radiotosim.open();
 	radio.conecta();
 
     if(robot_remote_control)
