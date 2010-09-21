@@ -17,6 +17,7 @@ RoboPETClient aitoradio(PORT_AI_TO_RADIO, IP_AI_TO_RADIO);
 
 int DEBUG = 1;
 int robot_total, robot_remote_control;
+int team_id;
 
 typedef struct
 {
@@ -36,6 +37,7 @@ Radio radio;
 
 void sendToTracker();
 void sendToRobots();
+void sendToSimulator();
 
 double toRad(float degrees)
 {
@@ -200,14 +202,15 @@ void sendToSim()
 {
 	RoboPET_WrapperPacket packet;
 	RadioToSim *radiotosimPacket = packet.mutable_radiotosim();
+	radiotosimPacket->set_team_id( team_id );
 
 	for(int i=0; i < robot_total; i++) {
-		RadioToSim::Robot *r1 = radiotosimPacket->add_yellow_robots();
-       	r1->set_force_x( robots[i].force_x );
-		r1->set_force_y( robots[i].force_y );
-		r1->set_displacement_theta( robots[i].displacement_theta );
-		r1->set_kick( robots[i].kick );
-		r1->set_drible( robots[i].drible );
+		RadioToSim::Robot *r = radiotosimPacket->add_robots();
+       	r->set_force_x( robots[i].force_x );
+		r->set_force_y( robots[i].force_y );
+		r->set_displacement_theta( robots[i].displacement_theta );
+		r->set_kick( robots[i].kick );
+		r->set_drible( robots[i].drible );
 	}
 
 	radiotosim.send(packet);
@@ -307,31 +310,30 @@ void remoteControl()
     }
 }
 
-int amain(void)
-{
-  while(!kbhit())
-    puts("Press a key!");
-  printf("You pressed '%c'!\n", getchar());
-  return 0;
-}
-
 int main(int argc, char **argv)
 {
 	printf("Radio Running!\n");
 
-    if(argc > 1) {
-        robot_remote_control = atoi(argv[1]);
-        printf("robot_remote_control set to %i\n", robot_remote_control);
-        if(argc > 4) {
-            CLOCK_WISE_VELOCITY = atoi(argv[2]);
-            COUNTER_CLOCK_WISE_VELOCITY = atoi(argv[3]);
-            MIN_DIFF = atoi(argv[4]);
-            printf("CLOCK_WISE_VELOCITY: %i\nCOUNTER_CLOCK_WISE_VELOCITY: %i\nMIN_DIFF = %i\n",
-            CLOCK_WISE_VELOCITY, COUNTER_CLOCK_WISE_VELOCITY, MIN_DIFF);
-        }
+    if(argc == 2)
+		team_id = atoi(argv[1]);
+	else {
+		team_id = 0;
+	}
+		        
+        /*else {
+			robot_remote_control = atoi(argv[1]);
+			printf("robot_remote_control set to %i\n", robot_remote_control);
+			if(argc > 4) {
+				CLOCK_WISE_VELOCITY = atoi(argv[2]);
+				COUNTER_CLOCK_WISE_VELOCITY = atoi(argv[3]);
+				MIN_DIFF = atoi(argv[4]);
+				printf("CLOCK_WISE_VELOCITY: %i\nCOUNTER_CLOCK_WISE_VELOCITY: %i\nMIN_DIFF = %i\n",
+				CLOCK_WISE_VELOCITY, COUNTER_CLOCK_WISE_VELOCITY, MIN_DIFF);
+			}
+		}
     } else {
         robot_remote_control = 0;
-    }
+    }*/
 
 	aitoradio.open(false);
 
