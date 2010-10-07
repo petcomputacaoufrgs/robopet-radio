@@ -55,17 +55,7 @@ int CLOCK_WISE_VELOCITY = 15,
 
 void giraAnda(int robotIndex)
 {
-//    int i =robotIndex;
-//				printf("Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].displacement_x,
-//																	robots[i].displacement_y, robots[i].displacement_theta,
-//																	robots[i].kick, robots[i].drible);
-    //float MIN_DIFF = 30; //now global
-
-    //printf("(%f, %f)\n", Vector(1.2, 0.2).getX(), Vector(1.4, 4.0).getY());
-
     Vector desl(robots[robotIndex].force_x, robots[robotIndex].force_y);
-
-    //printf("desl(%f, %f)\n", desl.getX(), desl.getY());
 
     printf("angleClockwise: %lf\n", desl.angleClockwise());
     if(desl.angleClockwise() < MIN_DIFF || desl.angleClockwise() > 360 - MIN_DIFF)
@@ -227,13 +217,22 @@ void send()
 
 void sendToRobots()
 {
+	/*
+	0000 0000 (0%) - 1111 1111 (100%) - 1000 0000 (50%)
+	byte 1: índice do robo
+	byte 2: força motor
+	byte 3: força motor
+	byte 4: força motor
+	byte 5: chute
+	*/	
+
 	for(int i=0; i < robot_total; i++)
 	{
 	    giraAnda(i);
 		motionConversion(i);
 		if(DEBUG)
 		{
-				printf("SENDING Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].force_x,
+			printf("SENDING Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].force_x,
 																	robots[i].force_y, robots[i].displacement_theta,
 																	robots[i].kick, robots[i].drible);
 			printf("%d = ", robots[i].id+1);
@@ -245,7 +244,13 @@ void sendToRobots()
 		                                                                             \n");
 
 		//robotNumber, motorForces, drible, kick
-		radio.send(robots[i].id+1, robots[i].motorForces, robots[i].drible, robots[i].kick);
+		//radio.send(robots[i].id+1, robots[i].motorForces, robots[i].drible, robots[i].kick);
+
+		//--->>falta concatenar as informações
+
+		unsigned char data_send[BYTES_TO_WRITE] = {0}; //data to write
+		//unsigned char data_receive[BYTES_TO_RECEIVE] = {0}; //data received
+		sendPacketsToRobots(data_send);
 	}
 }
 
@@ -312,6 +317,12 @@ void remoteControl()
 
 int main(int argc, char **argv)
 {
+	libusb_device_handle *dev_handle; //a device handle
+	libusb_context *ctx = NULL; //a libusb session
+
+
+	
+
 	printf("Radio Running!\n");
 
     if(argc == 2)
