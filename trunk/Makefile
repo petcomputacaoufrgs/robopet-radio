@@ -1,5 +1,5 @@
 CC = colorgcc
-FLAGS = -Wall -I$(ROBOPET_PATH) -I$(COMMUNICATION_H) -I$(SOCKETS_PATH) -lstdc++ -lprotobuf
+FLAGS = -Wall -I$(ROBOPET_PATH) -I$(COMMUNICATION_H) -I$(SOCKETS_PATH) -lstdc++ -lprotobuf -lusb-1.0
 
 #AI_PATH = ../IA/lib
 ROBOPET_PATH = ../lib
@@ -18,6 +18,11 @@ radio: main.cpp radio.o $(ROBOPET_LIB) $(COMMUNICATION_LIB)
 	@echo $@
 	@$(CC) -o $@ $^ $(FLAGS) `pkg-config --cflags --libs protobuf`
 
-radio.o: radio.cpp radio.h
+# old radio serial interface
+#%radio.o: radio.cpp radio.h
+#	@echo $@
+#	@$(CC) -c -o $@ $<
+
+radio.o: radio_usb.cpp radio_usb.h
 	@echo $@
 	@$(CC) -c -o $@ $<

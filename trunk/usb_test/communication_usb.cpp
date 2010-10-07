@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cstdlib>
-#include <libusb-1.0/libusb.h>
+#include <../libusb-1.0/libusb.h>
 #include "petusb.h"
 
 //these constants are defined for our PIC device
