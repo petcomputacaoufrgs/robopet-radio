@@ -6,17 +6,19 @@
 
 #include "rp_client.h"
 #include "rp_server.h"
-#include "radio.h"
+#include "radio_usb.h"
 #include "vector.h"
 
-#define PI acos(-1)
+#define PI 					acos(-1)
+#define WRITE_BYTE_NUMBER	5 
+#define NUM_ROBOTS 			5	
 
 //RoboPETServer radiototracker(PORT_RADIO_TO_TRACKER, IP_RADIO_TO_TRACKER);
 RoboPETServer radiotosim(PORT_RADIO_TO_SIM, IP_RADIO_TO_SIM);
 RoboPETClient aitoradio(PORT_AI_TO_RADIO, IP_AI_TO_RADIO);
 
 int DEBUG = 1;
-int robot_total, robot_remote_control;
+int robot_total = NUM_ROBOTS, robot_remote_control;
 int team_id;
 
 typedef struct
@@ -32,8 +34,7 @@ typedef struct
 
 #define NUM_ROBOTS 5
 Robot robots[NUM_ROBOTS];
-Radio radio;
-
+RadioUSB radio;
 
 void sendToTracker();
 void sendToRobots();
@@ -201,6 +202,7 @@ void sendToSim()
 		r->set_displacement_theta( robots[i].displacement_theta );
 		r->set_kick( robots[i].kick );
 		r->set_drible( robots[i].drible );
+		r->set_id( robots[i].id );
 	}
 
 	radiotosim.send(packet);
@@ -246,11 +248,20 @@ void sendToRobots()
 		//robotNumber, motorForces, drible, kick
 		//radio.send(robots[i].id+1, robots[i].motorForces, robots[i].drible, robots[i].kick);
 
-		//--->>falta concatenar as informações
+		//Initializes the data to be send for the robot with index i
+		unsigned char data_send[WRITE_BYTE_NUMBER] = {0}; //data to write
+		data_send[0] = robots[i].id+1;
+		data_send[1] = robots[i].motorForces[0];
+		data_send[2] = robots[i].motorForces[1];
+		data_send[3] = robots[i].motorForces[2];
+		data_send[4] = robots[i].kick;
+		for(int j = 0; j < sizeof(data_send); j++)
+		{
+			printf("Data[%d]: %d\n",j, data_send[j]);
+		}
 
-		unsigned char data_send[BYTES_TO_WRITE] = {0}; //data to write
-		//unsigned char data_receive[BYTES_TO_RECEIVE] = {0}; //data received
-		sendPacketsToRobots(data_send);
+
+		radio.usbSendData( data_send, WRITE_BYTE_NUMBER );
 	}
 }
 
@@ -317,13 +328,9 @@ void remoteControl()
 
 int main(int argc, char **argv)
 {
-	libusb_device_handle *dev_handle; //a device handle
-	libusb_context *ctx = NULL; //a libusb session
-
-
-	
-
 	printf("Radio Running!\n");
+
+	radio.usbInitializeDevice();
 
     if(argc == 2)
 		team_id = atoi(argv[1]);
@@ -353,10 +360,11 @@ int main(int argc, char **argv)
 
 	//radiototracker.open();
 	radiotosim.open();
-	radio.conecta();
 
-    if(robot_remote_control)
+	/*    
+	if(robot_remote_control)
         remoteControl();
+	*/
 
 	clrscr();
 	int scrCount = 0;
@@ -370,16 +378,19 @@ int main(int argc, char **argv)
 		receive();
 		send();
 	}
+	
     while(1) {
         printf("mandando os robos pararem ...\n");
-	    for(int i=0; i < robot_total; i++)
+	    for(int i = 0; i < robot_total; i++)
 	    {
-			    for(int j=0; j<3; j++)
-				    robots[i].motorForces[j] = 0;
+			for(int j = 0; j < 3; j++)
+				robots[i].motorForces[j] = 0;
 
             for(int k = 0; k < 1000; k++)
-		        radio.send(robots[i].id+1, robots[i].motorForces, robots[i].drible, robots[i].kick);
+				sendToRobots();
 	    }
 	}
+
+	radio.usbClosingDevice();
 }
 
