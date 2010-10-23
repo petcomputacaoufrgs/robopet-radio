@@ -174,6 +174,8 @@ void receive()
 																	robots[i].kick, robots[i].drible);
 		}
 	}
+	else
+		printf("Didn't receive  AI-To-Radio.\n");
 }
 
 
@@ -203,6 +205,10 @@ void sendToSim()
 		r->set_kick( robots[i].kick );
 		r->set_drible( robots[i].drible );
 		r->set_id( robots[i].id );
+		
+		printf("SENT Robot %d: forceVector<%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", robots[i].id, robots[i].force_x,
+																							robots[i].force_y, robots[i].displacement_theta,
+																							robots[i].kick, robots[i].drible);
 	}
 
 	radiotosim.send(packet);
@@ -245,6 +251,7 @@ void sendToRobots()
 		printf("                                                                     \n \
 		                                                                             \n");
 
+		// old Serial Radio protocol
 		//robotNumber, motorForces, drible, kick
 		//radio.send(robots[i].id+1, robots[i].motorForces, robots[i].drible, robots[i].kick);
 
@@ -330,14 +337,14 @@ int main(int argc, char **argv)
 {
 	printf("Radio Running!\n");
 
-	radio.usbInitializeDevice();
+	//radio.usbInitializeDevice(); //comment me if you want to test the code without the radio plugged in
 
     if(argc == 2)
 		team_id = atoi(argv[1]);
 	else {
 		team_id = 0;
 	}
-		        
+		//old remote control module. don't delete it, may be useful in near future
         /*else {
 			robot_remote_control = atoi(argv[1]);
 			printf("robot_remote_control set to %i\n", robot_remote_control);
@@ -358,7 +365,7 @@ int main(int argc, char **argv)
 	printf("Press <Enter> to open connection with client...\n");
 	getchar();
 
-	//radiototracker.open();
+	//radiototracker.open(); //not being used yet
 	radiotosim.open();
 
 	/*    
