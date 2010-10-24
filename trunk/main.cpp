@@ -267,7 +267,7 @@ void sendToRobots()
 			printf("Data[%d]: %d\n",j, data_send[j]);
 		}
 
-
+		usleep(1000000);
 		radio.usbSendData( data_send, WRITE_BYTE_NUMBER );
 	}
 }
@@ -337,7 +337,7 @@ int main(int argc, char **argv)
 {
 	printf("Radio Running!\n");
 
-	//radio.usbInitializeDevice(); //comment me if you want to test the code without the radio plugged in
+	radio.usbInitializeDevice(); //comment me if you want to test the code without the radio plugged in
 
     if(argc == 2)
 		team_id = atoi(argv[1]);
