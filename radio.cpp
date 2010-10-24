@@ -79,6 +79,8 @@ void Radio::coloca_na_string(char* aux,int nrobo, int* fm, int drible, int kick)
 
 	i+=2;
 	aux[i]=TAB;
+
+	fputs(stdout, aux, 5);
 }
 
 void Radio::conecta(const char* device, const int baud, const int databits,
@@ -159,7 +161,7 @@ void Radio::conecta(const char* device, const int baud, const int databits,
 
 void Radio::send(const int robotNumber, int* motorForces, const int drible, const int kick)
 {
-	//char message[500]; //moved to the class
+	//char message[500]; //moved to the class	
 	coloca_na_string(message, robotNumber, motorForces, drible, kick);
     //write(fd, message, 2+NUMMOTORES+5); //moved to realSend
 }
