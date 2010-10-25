@@ -92,12 +92,6 @@ int RadioUSB::usbSendData( unsigned char *data, int num_bytes )
 		cout << "Data["<<i<<"]: "<<(int)data[i]<<endl; //just to see the data we want to write
 	r = libusb_bulk_transfer(_dev_handle, (_endpoint_address | LIBUSB_ENDPOINT_OUT), data, num_bytes, &actual, 0);
 
-	puts("---------------");
-	for (int i=0; i < 64; i++) {
-		printf("%04d\n", data[i] );
-	}
-	puts("---------------");
-
 	cout << "Writing Data..." << endl;
 	if(r == 0 && actual == num_bytes) //we wrote the 64 bytes successfully
 	{
