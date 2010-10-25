@@ -95,10 +95,10 @@ void motionConversion(int robotIndex)
 	robotInfo[0] = robots[robotIndex].force_x;
 	robotInfo[1] = robots[robotIndex].force_y;
 	robotInfo[2] = robots[robotIndex].displacement_theta;
-/*
-	for(int i = 0; i < 3; i++) {
-	    printf("robotInfo[%i]: %lf\n", i, robotInfo[i]);
-	}//*/
+
+	//for(int i = 0; i < 3; i++) {
+	    //printf("robotInfo[%i]: %lf\n", i, robotInfo[i]);
+	//}
 
 	for(int i = 0; i < 3; i++) {
 		acum[i] = 0;
@@ -106,10 +106,10 @@ void motionConversion(int robotIndex)
 			acum[i] += motionMatrix[i][j] * robotInfo[j];
 		}
 	}
-/*
-    for(int i = 0; i < 3; i++) {
-        printf("acum[%i]: %lf\n", i, acum[i]);
-    }//*/
+
+    //for(int i = 0; i < 3; i++) {
+        //printf("acum[%i]: %lf\n", i, acum[i]);
+    //}
 
 	double max = -99999;
 	for(int i=0; i<3; i++)
@@ -120,20 +120,26 @@ void motionConversion(int robotIndex)
 
 	for(int i=0; i<3; i++)
 		if(max != 0)
-			acum[i] = 30 * acum[i] / (float) max;
-/*
-    for(int i = 0; i < 3; i++) {
-        printf("acum[%i]: %lf\n", i, acum[i]);
-    }//*/
+			acum[i] = 60 * acum[i] / (float) max;
 
-    for(int i = 0; i < 3; i++)
+    //for(int i = 0; i < 3; i++) {
+    //    printf("acum[%i]: %lf\n", i, acum[i]);
+    //}
+
+    for(int i = 0; i < 3; i++) {	
         robots[robotIndex].motorForces[motor_index_mask[i]] = acum[i];
-/*
-    for(int i = 0; i < 3; i++) {
-        printf("robots[%i].motorForces[%i]: %i\n", robotIndex, i, robots[robotIndex].motorForces[i]);
-    }//*/
+		printf("nao conv: %lf\n", acum[i]);
+		if (acum[i] < 0) {
+				robots[robotIndex].motorForces[motor_index_mask[i]] = (int) (abs(acum[i])+0.5) | 0x80;
+		}
+		
+		
+	}
+    //for(int i = 0; i < 3; i++) {
+    //    printf("robots[%i].motorForces[%i]: %i\n", robotIndex, i, robots[robotIndex].motorForces[i]);
+    //}
 
-	robots[robotIndex].motorForces[3] = 0;
+	//robots[robotIndex].motorForces[3] = 0;
 
 	//quebra-inércia
 #ifdef QUEBRA_INERCIA
@@ -218,7 +224,7 @@ void sendToSim()
 void send()
 {
 	//sendToTracker();
-	sendToSim();
+	//sendToSim();
 	sendToRobots();
 }
 
@@ -257,18 +263,29 @@ void sendToRobots()
 
 		//Initializes the data to be send for the robot with index i
 		unsigned char data_send[WRITE_BYTE_NUMBER] = {0}; //data to write
+		#define SLEEP_TIME 7250
+		//getchar();
+
 		data_send[0] = robots[i].id+1;
 		data_send[1] = robots[i].motorForces[0];
 		data_send[2] = robots[i].motorForces[1];
 		data_send[3] = robots[i].motorForces[2];
 		data_send[4] = robots[i].kick;
-		for(int j = 0; j < sizeof(data_send); j++)
-		{
-			printf("Data[%d]: %d\n",j, data_send[j]);
-		}
 
-		usleep(1000000);
 		radio.usbSendData( data_send, WRITE_BYTE_NUMBER );
+		usleep(SLEEP_TIME);
+
+		
+//		radio.usbSendData( data_send, WRITE_BYTE_NUMBER );
+//		usleep(SLEEP_TIME);
+		//getchar();
+
+//		for(int j = 0; j < sizeof(data_send); j++)
+//		{
+//			printf("Data[%d]: %d\n",j, data_send[j]);
+//		}
+
+		
 	}
 }
 
