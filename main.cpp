@@ -28,6 +28,7 @@ typedef struct
 	float displacement_theta;
 	int kick;
 	int drible;
+	float current_theta;
 	int motorForces[4];
 	int id;
 } Robot;
@@ -52,34 +53,37 @@ int motor_index_mask[] = {2, 0, 1};
 
 int CLOCK_WISE_VELOCITY = 15,
     COUNTER_CLOCK_WISE_VELOCITY = 16,
-    MIN_DIFF = 30;
+    MIN_DIFF = 40,
+	MAX_FORCE = 127;
 
 void giraAnda(int robotIndex)
 {
-    Vector desl(robots[robotIndex].force_x, robots[robotIndex].force_y);
+	Vector desl(robots[robotIndex].force_x, -1*robots[robotIndex].force_y);
+	Vector normal(cos(robots[robotIndex].current_theta*3.1415/180), sin(robots[robotIndex].current_theta*3.1415/180));
 
-    printf("angleClockwise: %lf\n", desl.angleClockwise());
-    if(desl.angleClockwise() < MIN_DIFF || desl.angleClockwise() > 360 - MIN_DIFF)
-    {
-        printf("ahead!\n");
-        robots[robotIndex].motorForces[0] = 0;
-        robots[robotIndex].motorForces[1] = 30;
-        robots[robotIndex].motorForces[2] = -30;
-    }
-    else if(desl.angleClockwise() > MIN_DIFF && desl.angleClockwise() < 180)
-    {
-        printf("turning clockwise...\n");
-        for(int i=0; i<3; i++)
-            robots[robotIndex].motorForces[i] = -CLOCK_WISE_VELOCITY;
-    }
-    else
-    {
-        printf("turning counterclockwise...\n");
-        for(int i=0; i<3; i++)
-            robots[robotIndex].motorForces[i] = COUNTER_CLOCK_WISE_VELOCITY;
-    }
+	
+	float angle = desl.angle(normal)*180/3.1415;
 
-    robots[robotIndex].motorForces[3] = 0;
+	printf("Angle %f\n", angle);
+
+	 if(angle < MIN_DIFF) {
+		printf("ahead ahoy!\n");
+		robots[robotIndex].motorForces[0] = MAX_FORCE*6/10;
+        robots[robotIndex].motorForces[1] = 0;
+        robots[robotIndex].motorForces[2] = (MAX_FORCE*6/10) | 128;
+	}
+	else if(angle > MIN_DIFF && angle < 180) {
+		//horario
+		printf("horario\n");
+		for(int i=0; i < 3; i++)
+			robots[robotIndex].motorForces[i] = int(MAX_FORCE*0.5/10) | 128;
+	}
+	else {
+		//antihorario mano
+		printf("antihorario\n");
+		for(int i=0; i < 3; i++)
+			robots[robotIndex].motorForces[i] = MAX_FORCE*2/10;
+	}
 }
 
 void motionConversion(int robotIndex)
@@ -174,6 +178,8 @@ void receive()
 			robots[i].kick = packet.aitoradio().robots(i).kick();
 			robots[i].drible = packet.aitoradio().robots(i).drible();
 			robots[i].id = packet.aitoradio().robots(i).id();
+			robots[i].current_theta = packet.aitoradio().robots(i).current_theta();
+
 			if(DEBUG)
 				printf("RECEIVE Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].force_x,
 																	robots[i].force_y, robots[i].displacement_theta,
@@ -243,7 +249,7 @@ void sendToRobots()
 	for(int i=0; i < robot_total; i++)
 	{
 	    giraAnda(i);
-		motionConversion(i);
+		//motionConversion(i);
 		if(DEBUG)
 		{
 			printf("SENDING Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].force_x,
@@ -263,10 +269,10 @@ void sendToRobots()
 
 		//Initializes the data to be send for the robot with index i
 		unsigned char data_send[WRITE_BYTE_NUMBER] = {0}; //data to write
-		#define SLEEP_TIME 7250
+		#define SLEEP_TIME 250000
 		//getchar();
 
-		data_send[0] = robots[i].id+1;
+		data_send[0] = robots[i].id;
 		data_send[1] = robots[i].motorForces[0];
 		data_send[2] = robots[i].motorForces[1];
 		data_send[3] = robots[i].motorForces[2];
