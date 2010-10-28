@@ -9,10 +9,10 @@
 #include "radio_usb.h"
 #include "vector.h"
 
-#define PI 					acos(-1)
-#define WRITE_BYTE_NUMBER	5 
+#define PI 					acos(-1) 
 #define NUM_ROBOTS 			5	
-
+#define WRITE_BYTE_NUMBER	5*NUM_ROBOTS
+#define SLEEP_TIME 			7250*5
 //RoboPETServer radiototracker(PORT_RADIO_TO_TRACKER, IP_RADIO_TO_TRACKER);
 RoboPETServer radiotosim(PORT_RADIO_TO_SIM, IP_RADIO_TO_SIM);
 RoboPETClient aitoradio(PORT_AI_TO_RADIO, IP_AI_TO_RADIO);
@@ -170,6 +170,11 @@ void receive()
 		printf("Received AI-To-Radio!\n");
 
 		robot_total = packet.aitoradio().robots_size();
+
+		//GAMBIARRA PARA DEIXAR ECP FELIZ
+		if (robot_total < 0)
+			robot_total = NUM_ROBOTS;
+ 
 		for(int i=0; i<packet.aitoradio().robots_size() && i<NUM_ROBOTS; i++)
 		{
 			robots[i].force_x = packet.aitoradio().robots(i).displacement_x();
@@ -246,10 +251,15 @@ void sendToRobots()
 	byte 5: chute
 	*/	
 
-	for(int i=0; i < robot_total; i++)
+	//Initializes the data to be send for the robot with index i
+	unsigned char data_send[WRITE_BYTE_NUMBER]; //data to write
+	memset(data_send,0,sizeof data_send);
+
+	for(int i=0; i < robot_total; i+=1)
 	{
 	    giraAnda(i);
 		//motionConversion(i);
+
 		if(DEBUG)
 		{
 			printf("SENDING Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].force_x,
@@ -262,37 +272,18 @@ void sendToRobots()
 		}
 		printf("                                                                     \n \
 		                                                                             \n");
+		//printf("me da o motor\n");		
+		data_send[i*NUM_ROBOTS    ] = robots[i].id;
+		data_send[i*NUM_ROBOTS + 1] = robots[i].motorForces[0];
+		data_send[i*NUM_ROBOTS + 2] = robots[i].motorForces[1];
+		data_send[i*NUM_ROBOTS + 3] = robots[i].motorForces[2];
+		data_send[i*NUM_ROBOTS + 4] = robots[i].kick;
 
-		// old Serial Radio protocol
-		//robotNumber, motorForces, drible, kick
-		//radio.send(robots[i].id+1, robots[i].motorForces, robots[i].drible, robots[i].kick);
-
-		//Initializes the data to be send for the robot with index i
-		unsigned char data_send[WRITE_BYTE_NUMBER] = {0}; //data to write
-		#define SLEEP_TIME 250000
-		//getchar();
-
-		data_send[0] = robots[i].id;
-		data_send[1] = robots[i].motorForces[0];
-		data_send[2] = robots[i].motorForces[1];
-		data_send[3] = robots[i].motorForces[2];
-		data_send[4] = robots[i].kick;
-
-		radio.usbSendData( data_send, WRITE_BYTE_NUMBER );
-		usleep(SLEEP_TIME);
-
-		
-//		radio.usbSendData( data_send, WRITE_BYTE_NUMBER );
-//		usleep(SLEEP_TIME);
-		//getchar();
-
-//		for(int j = 0; j < sizeof(data_send); j++)
-//		{
-//			printf("Data[%d]: %d\n",j, data_send[j]);
-//		}
-
-		
 	}
+
+	radio.usbSendData( data_send, WRITE_BYTE_NUMBER );
+	usleep(SLEEP_TIME);
+	
 }
 
 int kbhit(void)
