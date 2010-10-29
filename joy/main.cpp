@@ -1,3 +1,9 @@
+//shoryuken = increment_id
+//brake     = decrement_id
+
+
+
+
 #ifndef WIN32
 #include <GL/glut.h>
 #define GAMBI_INIT() glutInit(&argc, argv)
@@ -41,12 +47,12 @@ void sendToRadio(RoboPETServer joyToRadio) {
     RoboPET_WrapperPacket packet;
     AIToRadio *aitoradioPacket = packet.mutable_aitoradio();
 
-    AIToRAdio::Robot *r = aitoradioPacket->add_robots();
+    AIToRadio::Robot *r = aitoradioPacket->add_robots();
 
     RP::Vector disp(global_joy.getX(), global_joy.getY());
     disp.normalizeMe();
 
-    float disp_theta = 360 * global_joy/1000;
+    float disp_theta = 360 * global_joy.getZ()/1000;
 
     r->set_displacement_x(disp.getX());
     r->set_displacement_y(disp.getY());
@@ -57,7 +63,7 @@ void sendToRadio(RoboPETServer joyToRadio) {
     r->set_id(current_bot);
     r->set_current_theta(0);
 
-    aitoradio.send(packet);
+    joyToRadio.send(packet);
 
 }
 
@@ -72,7 +78,7 @@ void JoystickFunc(unsigned int mask, int x, int y, int z)
 		cout << endl;
 		global_joy.printStatus();
 
-        sendToRAdio(joyToRadio);
+        sendToRadio(joyToRadio);
 }
 
 int main(int argc, char **argv)
