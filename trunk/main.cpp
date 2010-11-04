@@ -13,12 +13,13 @@
 #define NUM_ROBOTS 			5
 #define WRITE_BYTE_NUMBER	5*NUM_ROBOTS
 #define SLEEP_TIME 			7250*5
+
 //RoboPETServer radiototracker(PORT_RADIO_TO_TRACKER, IP_RADIO_TO_TRACKER);
 RoboPETServer radiotosim(PORT_RADIO_TO_SIM, IP_RADIO_TO_SIM);
 RoboPETClient aitoradio(PORT_AI_TO_RADIO, IP_AI_TO_RADIO);
 
 int DEBUG = 1;
-int robot_total = NUM_ROBOTS, robot_remote_control;
+int robot_total = NUM_ROBOTS;
 int team_id;
 
 typedef struct
@@ -66,20 +67,20 @@ void giraAnda(int robotIndex)
 	printf("Angle %f\n", angle);
 
 	 if(angle < MIN_DIFF) {
-		printf("ahead ahoy!\n");
+		//printf("ahead ahoy!\n");
 		robots[robotIndex].motorForces[0] = MAX_FORCE*6/10;
         robots[robotIndex].motorForces[1] = 0;
         robots[robotIndex].motorForces[2] = (MAX_FORCE*6/10) | 128;
 	}
 	else if(angle > MIN_DIFF && angle < 180) {
 		//horario
-		printf("horario\n");
+		//printf("horario\n");
 		for(int i=0; i < 3; i++)
 			robots[robotIndex].motorForces[i] = int(MAX_FORCE*0.5/10) | 128;
 	}
 	else {
 		//antihorario mano
-		printf("antihorario\n");
+		//printf("antihorario\n");
 		for(int i=0; i < 3; i++)
 			robots[robotIndex].motorForces[i] = MAX_FORCE*2/10;
 	}
