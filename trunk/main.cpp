@@ -33,7 +33,6 @@ typedef struct
 	int id;
 } Robot;
 
-#define NUM_ROBOTS 5
 Robot robots[NUM_ROBOTS];
 RadioUSB radio;
 
@@ -85,82 +84,6 @@ void giraAnda(int robotIndex)
 			robots[robotIndex].motorForces[i] = MAX_FORCE*2/10;
 	}
 }
-
-void motionConversion(int robotIndex)
-{
-	static double motionMatrix[3][3] = {{-sin(toRad(60)), -sin(toRad(30)), -1},
-										{0				,	1			 , -1},
-										{sin(toRad(60))	, -sin(toRad(30)), -1}};
-	double robotInfo[3], acum[3];
-
-    //printf("toRad(60): %lf", toRad(60));
-    //printf("sin(toRad(60)): %lf", sin(toRad(60)));
-
-	robotInfo[0] = robots[robotIndex].force_x;
-	robotInfo[1] = robots[robotIndex].force_y;
-	robotInfo[2] = robots[robotIndex].displacement_theta;
-
-	//for(int i = 0; i < 3; i++) {
-	    //printf("robotInfo[%i]: %lf\n", i, robotInfo[i]);
-	//}
-
-	for(int i = 0; i < 3; i++) {
-		acum[i] = 0;
-		for(int j = 0; j < 3; j++) {
-			acum[i] += motionMatrix[i][j] * robotInfo[j];
-		}
-	}
-
-    //for(int i = 0; i < 3; i++) {
-        //printf("acum[%i]: %lf\n", i, acum[i]);
-    //}
-
-	double max = -99999;
-	for(int i=0; i<3; i++)
-		if(fabs(acum[i]) > max)
-			max = fabs(acum[i]);
-
-    //printf("max: %lf\n", max);
-
-	for(int i=0; i<3; i++)
-		if(max != 0)
-			acum[i] = 60 * acum[i] / (float) max;
-
-    //for(int i = 0; i < 3; i++) {
-    //    printf("acum[%i]: %lf\n", i, acum[i]);
-    //}
-
-    for(int i = 0; i < 3; i++) {
-        robots[robotIndex].motorForces[motor_index_mask[i]] = acum[i];
-		printf("nao conv: %lf\n", acum[i]);
-		if (acum[i] < 0) {
-				robots[robotIndex].motorForces[motor_index_mask[i]] = (int) (abs(acum[i])+0.5) | 0x80;
-		}
-
-
-	}
-    //for(int i = 0; i < 3; i++) {
-    //    printf("robots[%i].motorForces[%i]: %i\n", robotIndex, i, robots[robotIndex].motorForces[i]);
-    //}
-
-	//robots[robotIndex].motorForces[3] = 0;
-
-	//quebra-inércia
-#ifdef QUEBRA_INERCIA
-	if(!(rand() % 10) && !inerciaBreaker) {
-	    inerciaBreaker = true;
-	    inerciaCount = 10;
-	}
-
-	if(inerciaBreaker && inerciaCount--) {
-	    for(int i = 0; i < 3; i++)
-	        robots[robotIndex].motorForces[i] = 30;
-	}
-
-	if(!inerciaCount) inerciaBreaker = false;
-#endif
-}
-
 
 void receive()
 {
@@ -312,41 +235,7 @@ int kbhit(void)
   return 0;
 }
 
-void remoteControl()
-{
-#define TIMES_SEND 100
-    printf("robot: %i\n", robot_remote_control);
-    robot_total = 1;
-    robots[0].id = robot_remote_control - 1;
-    robots[0].drible = 0;
-    robots[0].kick = 0;
-    robots[0].force_x = 0;
-    robots[0].force_y = 0;
-    robots[0].displacement_theta = 0;
-
-    char c;
-    while(1) {
-        while(!kbhit())
-        {
-            send();
-        }
-        fflush(stdin);
-        scanf(" %1c", &c);
-        printf("-> %c\n", c);
-        Vector v(1, 0);
-        int rotation[] = {0, 240, 180, 120, 270, 0, 90, 300, 0, 60};
-#define CHAR_TO_DIGIT(x) ((x) - '0')
-        if('1' <= c && c <= '9') {
-            v.rotate(rotation[CHAR_TO_DIGIT(c)]);
-        } else if(c == '0') {
-            v = Vector(0, 0);
-        }
-        robots[0].force_x = v.getX();
-        robots[0].force_y = v.getY();
-    }
-}
-
-void initialize(int id)
+void initialize(int id, bool dummy)
 {
 
 	radio.usbInitializeDevice(); //comment me if you want to test the code without the radio plugged in
@@ -370,7 +259,7 @@ int main(int argc, char **argv)
 	printf("Radio Running!\n");
 
 	// initializes everything, sets variables blah blah
-	initialize( argc == 2 ? atoi( argv[1] ) : 0 );
+	initialize( (argc == 2 ? atoi(argv[1]) : 0) , true );
 
 	clrscr();
 	int scrCount = 0;
@@ -399,3 +288,4 @@ int main(int argc, char **argv)
 
 	radio.usbClosingDevice();
 }
+
