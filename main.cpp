@@ -347,20 +347,12 @@ void remoteControl()
     }
 }
 
-int main(int argc, char **argv)
+void initialize(int id)
 {
-
-	// initializes everything, sets variables blah blah
-	initialize();
-	printf("Radio Running!\n");
 
 	radio.usbInitializeDevice(); //comment me if you want to test the code without the radio plugged in
 
-    if(argc == 2)
-		team_id = atoi(argv[1]);
-	else {
-		team_id = 0;
-	}
+	team_id = id;
 
 	aitoradio.open(false);
 
@@ -370,10 +362,16 @@ int main(int argc, char **argv)
 	//radiototracker.open(); //not being used yet
 	radiotosim.open();
 
-	/*
-	if(robot_remote_control)
-        remoteControl();
-	*/
+
+}
+
+int main(int argc, char **argv)
+{
+
+	printf("Radio Running!\n");
+
+	// initializes everything, sets variables blah blah
+	initialize( argc == 2 ? atoi( argv[1] ) : 0 );
 
 	clrscr();
 	int scrCount = 0;
