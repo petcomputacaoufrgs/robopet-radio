@@ -34,9 +34,10 @@ void RenderScene(void)
 
 
 
-void sendToRadio(RoboPETServer joyToRadio) {
+void sendToRadio() {
 
     RoboPET_WrapperPacket packet;
+
     AIToRadio *aitoradioPacket = packet.mutable_aitoradio();
 
     AIToRadio::Robot *r = aitoradioPacket->add_robots();
@@ -57,6 +58,8 @@ void sendToRadio(RoboPETServer joyToRadio) {
 
     joyToRadio.send(packet);
 
+	printf("Sent AI to Radio\n");
+
 }
 
 void JoystickFunc(unsigned int mask, int x, int y, int z)
@@ -69,12 +72,17 @@ void JoystickFunc(unsigned int mask, int x, int y, int z)
 			cout << vectorzenyo[i] << " | ";
 		cout << endl;
 		global_joy.printStatus();
+}
 
-        sendToRadio(joyToRadio);
+void idleFunc() {
+	sendToRadio();
 }
 
 int main(int argc, char **argv)
 {
+
+	printf("Press <Enter> to open connection with client...\n");
+	getchar();
 
     joyToRadio.open();
 
@@ -88,9 +96,11 @@ int main(int argc, char **argv)
     glutDisplayFunc(RenderScene);
     //chama de 100 em 100 ms
     glutJoystickFunc(JoystickFunc,100);
+
+	glutIdleFunc(idleFunc);
+
     SetupRC();
     glutMainLoop();
 
     return 0;
 }
-
