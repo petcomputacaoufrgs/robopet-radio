@@ -2,15 +2,7 @@
 //brake     = decrement_id
 
 
-
-
-#ifndef WIN32
 #include <GL/glut.h>
-#define GAMBI_INIT() glutInit(&argc, argv)
-#else
-#define GAMBI_INIT() ;;
-#include <gl/glut.h>
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -86,9 +78,7 @@ int main(int argc, char **argv)
 
     joyToRadio.open();
 
-
-	//incializa a glut para funcionar no windows e no linux
-    GAMBI_INIT();
+	glutInit(&argc, argv);
 
 	//so para mostrar na tela
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
