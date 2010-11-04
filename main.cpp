@@ -9,8 +9,8 @@
 #include "radio_usb.h"
 #include "vector.h"
 
-#define PI 					acos(-1) 
-#define NUM_ROBOTS 			5	
+#define PI 					acos(-1)
+#define NUM_ROBOTS 			5
 #define WRITE_BYTE_NUMBER	5*NUM_ROBOTS
 #define SLEEP_TIME 			7250*5
 //RoboPETServer radiototracker(PORT_RADIO_TO_TRACKER, IP_RADIO_TO_TRACKER);
@@ -61,7 +61,7 @@ void giraAnda(int robotIndex)
 	Vector desl(robots[robotIndex].force_x, -1*robots[robotIndex].force_y);
 	Vector normal(cos(robots[robotIndex].current_theta*3.1415/180), sin(robots[robotIndex].current_theta*3.1415/180));
 
-	
+
 	float angle = desl.angle(normal)*180/3.1415;
 
 	printf("Angle %f\n", angle);
@@ -130,14 +130,14 @@ void motionConversion(int robotIndex)
     //    printf("acum[%i]: %lf\n", i, acum[i]);
     //}
 
-    for(int i = 0; i < 3; i++) {	
+    for(int i = 0; i < 3; i++) {
         robots[robotIndex].motorForces[motor_index_mask[i]] = acum[i];
 		printf("nao conv: %lf\n", acum[i]);
 		if (acum[i] < 0) {
 				robots[robotIndex].motorForces[motor_index_mask[i]] = (int) (abs(acum[i])+0.5) | 0x80;
 		}
-		
-		
+
+
 	}
     //for(int i = 0; i < 3; i++) {
     //    printf("robots[%i].motorForces[%i]: %i\n", robotIndex, i, robots[robotIndex].motorForces[i]);
@@ -174,7 +174,7 @@ void receive()
 		//GAMBIARRA PARA DEIXAR ECP FELIZ
 		if (robot_total < 0)
 			robot_total = NUM_ROBOTS;
- 
+
 		for(int i=0; i<packet.aitoradio().robots_size() && i<NUM_ROBOTS; i++)
 		{
 			robots[i].force_x = packet.aitoradio().robots(i).displacement_x();
@@ -222,7 +222,7 @@ void sendToSim()
 		r->set_kick( robots[i].kick );
 		r->set_drible( robots[i].drible );
 		r->set_id( robots[i].id );
-		
+
 		printf("SENT Robot %d: forceVector<%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", robots[i].id, robots[i].force_x,
 																							robots[i].force_y, robots[i].displacement_theta,
 																							robots[i].kick, robots[i].drible);
@@ -249,7 +249,7 @@ void sendToRobots()
 	byte 3: força motor
 	byte 4: força motor
 	byte 5: chute
-	*/	
+	*/
 
 	//Initializes the data to be send for the robot with index i
 	unsigned char data_send[WRITE_BYTE_NUMBER]; //data to write
@@ -272,7 +272,7 @@ void sendToRobots()
 		}
 		printf("                                                                     \n \
 		                                                                             \n");
-		//printf("me da o motor\n");		
+		//printf("me da o motor\n");
 		data_send[i*NUM_ROBOTS    ] = robots[i].id;
 		data_send[i*NUM_ROBOTS + 1] = robots[i].motorForces[0];
 		data_send[i*NUM_ROBOTS + 2] = robots[i].motorForces[1];
@@ -283,7 +283,7 @@ void sendToRobots()
 
 	radio.usbSendData( data_send, WRITE_BYTE_NUMBER );
 	usleep(SLEEP_TIME);
-	
+
 }
 
 int kbhit(void)
@@ -349,6 +349,9 @@ void remoteControl()
 
 int main(int argc, char **argv)
 {
+
+	// initializes everything, sets variables blah blah
+	initialize();
 	printf("Radio Running!\n");
 
 	radio.usbInitializeDevice(); //comment me if you want to test the code without the radio plugged in
@@ -358,21 +361,6 @@ int main(int argc, char **argv)
 	else {
 		team_id = 0;
 	}
-		//old remote control module. don't delete it, may be useful in near future
-        /*else {
-			robot_remote_control = atoi(argv[1]);
-			printf("robot_remote_control set to %i\n", robot_remote_control);
-			if(argc > 4) {
-				CLOCK_WISE_VELOCITY = atoi(argv[2]);
-				COUNTER_CLOCK_WISE_VELOCITY = atoi(argv[3]);
-				MIN_DIFF = atoi(argv[4]);
-				printf("CLOCK_WISE_VELOCITY: %i\nCOUNTER_CLOCK_WISE_VELOCITY: %i\nMIN_DIFF = %i\n",
-				CLOCK_WISE_VELOCITY, COUNTER_CLOCK_WISE_VELOCITY, MIN_DIFF);
-			}
-		}
-    } else {
-        robot_remote_control = 0;
-    }*/
 
 	aitoradio.open(false);
 
@@ -382,7 +370,7 @@ int main(int argc, char **argv)
 	//radiototracker.open(); //not being used yet
 	radiotosim.open();
 
-	/*    
+	/*
 	if(robot_remote_control)
         remoteControl();
 	*/
@@ -399,7 +387,7 @@ int main(int argc, char **argv)
 		receive();
 		send();
 	}
-	
+
     while(1) {
         printf("mandando os robos pararem ...\n");
 	    for(int i = 0; i < robot_total; i++)
@@ -414,4 +402,3 @@ int main(int argc, char **argv)
 
 	radio.usbClosingDevice();
 }
-
