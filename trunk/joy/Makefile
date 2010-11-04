@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -pedantic
+CFLAGS = -Wall
 GLUTFLAGS = -lglut -lGL -lGLU -lX11 -lm
 
 INCLUDE_PATHS = -I$(ROBOPET_PATH) -I$(COMMUNICATION_H) -I$(SOCKETS_PATH)
