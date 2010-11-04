@@ -258,7 +258,6 @@ void sendToRobots()
 	for(int i=0; i < robot_total; i+=1)
 	{
 	    giraAnda(i);
-		//motionConversion(i);
 
 		if(DEBUG)
 		{
@@ -270,9 +269,9 @@ void sendToRobots()
 				printf("motor(%d): %d - ", j, robots[i].motorForces[j]);
 			printf("\n");
 		}
+
 		printf("                                                                     \n \
 		                                                                             \n");
-		//printf("me da o motor\n");
 		data_send[i*NUM_ROBOTS    ] = robots[i].id;
 		data_send[i*NUM_ROBOTS + 1] = robots[i].motorForces[0];
 		data_send[i*NUM_ROBOTS + 2] = robots[i].motorForces[1];
