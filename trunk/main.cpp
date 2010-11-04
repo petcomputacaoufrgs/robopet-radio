@@ -238,7 +238,7 @@ int kbhit(void)
 void initialize(int id, bool dummy)
 {
 
-	radio.usbInitializeDevice(); //comment me if you want to test the code without the radio plugged in
+	//radio.usbInitializeDevice(); //comment me if you want to test the code without the radio plugged in
 
 	team_id = id;
 
@@ -271,7 +271,7 @@ int main(int argc, char **argv)
 	    }
 		rewindscr();
 		receive();
-		send();
+		//send();
 	}
 
     while(1) {
@@ -288,4 +288,3 @@ int main(int argc, char **argv)
 
 	radio.usbClosingDevice();
 }
-
