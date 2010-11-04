@@ -1,7 +1,3 @@
-//shoryuken = increment_id
-//brake     = decrement_id
-
-
 #include <GL/glut.h>
 
 #include <stdlib.h>
@@ -10,6 +6,9 @@
 #include "joy.h"
 #include "rp_server.h"
 #include "vector.h"
+
+#define INC 1
+#define DEC -1
 
 Joystick global_joy;
 
@@ -32,7 +31,29 @@ void RenderScene(void)
      glutSwapBuffers();
 }
 
+double calcCurrentTheta() {
 
+	double theta=0;
+
+	if(global_joy.getY() == 1000) {
+		theta = 90 - 45 * global_joy.getX()/1000;
+	}
+	else if (global_joy.getX() == -1000) {
+		theta = 180 - 45 * global_joy.getY()/1000;
+	}
+	else if (global_joy.getY() == -1000) {
+		theta = 270 + 45 * global_joy.getX()/1000;
+	}
+	else if (global_joy.getX() == 1000) {
+		theta = 360 + 45 * global_joy.getY()/1000;
+	}
+
+	if (theta >= 360) {
+		theta -= 360;
+	}
+
+	return theta;
+}
 
 void sendToRadio() {
 
@@ -47,31 +68,47 @@ void sendToRadio() {
 
     float disp_theta = 360 * global_joy.getZ()/1000;
 
-    r->set_displacement_x(disp.getX());
-    r->set_displacement_y(disp.getY());
+    r->set_displacement_x(0);
+    r->set_displacement_y((abs(global_joy.getX()) == 1000 ||
+						   abs(global_joy.getY()) == 1000  ) ?	1 : 0);
     r->set_displacement_theta(disp_theta);
 
     r->set_kick(0);
     r->set_drible(0);
     r->set_id(current_bot);
-    r->set_current_theta(0);
+
+	r->set_current_theta(calcCurrentTheta());
 
     joyToRadio.send(packet);
 
-	printf("Sent AI to Radio\n");
+	//printf("Sent AI to Radio\n");
 
+}
+
+void changeBot(int sinal) {
+
+	if(sinal < 0 && current_bot == 0) {}
+	else if(sinal > 0 && current_bot == 4) {}
+	else current_bot += sinal;
 }
 
 void JoystickFunc(unsigned int mask, int x, int y, int z)
 {
 
+		cout << endl << endl << "Robot " << current_bot << endl;
 		global_joy.receiveInput(mask,x,y,z);
 
-		vector<int> vectorzenyo = global_joy.getAll();
-		for(unsigned int i = 0; i < vectorzenyo.size(); ++i)
-			cout << vectorzenyo[i] << " | ";
+		vector<bool> buttons = global_joy.getButtonsPressed();
+		for(unsigned int i = 0; i < buttons.size(); ++i)
+			cout << buttons[i] << " | ";
 		cout << endl;
 		global_joy.printStatus();
+
+		if(buttons[SHORYUKEN])
+			changeBot(INC);
+		if(buttons[BRAKE])
+			changeBot(DEC);
+
 }
 
 void idleFunc() {
