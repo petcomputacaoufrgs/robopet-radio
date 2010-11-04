@@ -39,7 +39,7 @@ void Joystick::loadConfig()
 		vector<string> lines = splitString(content,"\n");
 
 		//FIXME sempre vem uma linha em branco no final, por isso o size - 1 ali
-		for (int i=0; i < lines.size() -1; ++i)
+		for (unsigned int i=0; i < lines.size() -1; ++i)
 		{
 				vector<string> command = splitString(lines[i], " = ");
 				command[0] = trimSpaces(command[0]);
@@ -143,7 +143,7 @@ vector<int> Joystick::getAll()
 
 	all_the_fucking_things_of_the_joy.insert(all_the_fucking_things_of_the_joy.begin(), axes.begin(), axes.end());
 
-	for(int i = 0; i < buttons.size(); ++i)
+	for(unsigned int i = 0; i < buttons.size(); ++i)
 		all_the_fucking_things_of_the_joy.push_back((int) buttons[i] );
 
 	return all_the_fucking_things_of_the_joy;
@@ -198,3 +198,4 @@ void Joystick::printActions()
 		for (int i=0; i < ACTIONS_TOTAL; ++i)
 		  cout << actionStrings[i] << ": " << (currentActions[i] ? "Yes" : "No") << endl;
 }
+

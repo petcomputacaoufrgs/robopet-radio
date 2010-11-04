@@ -20,12 +20,12 @@ enum {
 		BUTTONS_TOTAL
 };
 
-static int buttons[BUTTONS_TOTAL] = { 1, 2, 4, 8, 16, 32, 64, 128, 256,512};
+static volatile int buttons[BUTTONS_TOTAL] = { 1, 2, 4, 8, 16, 32, 64, 128, 256,512};
 
 static string buttonStrings[BUTTONS_TOTAL] = { "BUTTON_1","BUTTON_2","BUTTON_3",
-																							 "BUTTON_4","BUTTON_5","BUTTON_6",
-																			 				 "BUTTON_7","BUTTON_8","BUTTON_9",
-																							 "BUTTON_10"};
+											 "BUTTON_4","BUTTON_5","BUTTON_6",
+							 				 "BUTTON_7","BUTTON_8","BUTTON_9",
+											 "BUTTON_10"};
 
 enum {
 		KICK = 0,
@@ -99,3 +99,4 @@ class Joystick {
 };
 
 #endif
+
