@@ -1,12 +1,11 @@
 #ifndef _RADIOUSB_H_
 #define _RADIOUSB_H_
 
-#include <iostream>
+#include <stdio.h>
 #include <cstdlib>
 #include <libusb-1.0/libusb.h>
 
 using namespace std;
-
 
 //these constants are defined for our PIC device
 #define ENDPOINT_ADDRESS 1

@@ -2,7 +2,6 @@
 #define _RADIOUSB_CPP_
 
 #include "radio_usb.h"
-#include <stdio.h>
 
 RadioUSB::RadioUSB(bool realRadio)
 {
@@ -30,7 +29,7 @@ libusb_device_handle* RadioUSB::usbInitializeDevice()
 	    /* Initializing */
 	    r = libusb_init(&_ctx); //initialize the library for the session we just declared
 	    if(r < 0) {
-		    cout<<"Init Error "<<r<<endl; //there was an error
+		    printf("Init Error %d\n",r); //there was an error
 		    return NULL;
 	    }
 
@@ -40,21 +39,21 @@ libusb_device_handle* RadioUSB::usbInitializeDevice()
         /* Get list of devices */
 	    cnt = libusb_get_device_list(_ctx, &devs); //get the list of devices
 	    if(cnt < 0) {
-		    cout<<"Get Device Error"<<endl; //there was an error
+		    printf("Get Device Error\n"); //there was an error
 		    return NULL;
 	    }
 
-	    cout << cnt << " Devices in list." << endl;
+	    printf("%d devices in list.\n",cnt);
 
         /* Opening device */
         //0x04d8, 0x0042
 	    _dev_handle = libusb_open_device_with_vid_pid(_ctx, VENDOR_ID, PRODUCT_ID); //these are vendorID and productID found
 
 	    if(!_dev_handle) {
-		    cout<<"Cannot open device"<<endl;
+		    printf("Cannot open device\n");
 	    }
 	    else {
-		    cout<<"Device Opened"<<endl;
+		    printf("Device Opened\n");
         }
 
 	    libusb_free_device_list(devs, 1); //free the list, unref the devices in it
@@ -64,23 +63,23 @@ libusb_device_handle* RadioUSB::usbInitializeDevice()
         //If a kernel driver is active, you cannot claim the interface, and libusb will be unable to perform I/O
         //So, we want it to be 0!
 	    if(libusb_kernel_driver_active(_dev_handle, 0) == 1) {
-		    cout<<"Kernel Driver Active"<<endl;
+		    printf("Kernel Driver Active\n");
 
 		    //if a kernel drive is active, we've got to detach it
             //Detach a kernel driver from an interface.
             //If successful, you will then be able to claim the interface and perform I/O.
 		    if(libusb_detach_kernel_driver(_dev_handle, 0) == 0) //detach it
-			    cout<<"Kernel Driver Detached!"<<endl;
+			    printf("Kernel Driver Detached!\n");
 	    }
 
 
 	    r = libusb_claim_interface(_dev_handle, 0); //claim interface 0 (the first) of device (mine had jsut 1)
 	    if(r < 0) {
-		    cout<<"Cannot Claim Interface"<<endl;
+		    printf("Cannot Claim Interface\n");
 		    return NULL;
 	    }
 
-	    cout<<"Claimed Interface"<<endl;
+	    printf("Claimed Interface\n");
 
     }
 
@@ -96,26 +95,25 @@ int RadioUSB::usbSendData( unsigned char *data, int num_bytes )
         int actual; //used to find out how many bytes were written
         int r; //for return values
 
-        cout<<endl;
         for(int i = 0; i < num_bytes; i++)
-	        cout << "Data["<<i<<"]: "<<(int)data[i]<<endl; //just to see the data we want to write
+	        printf("\nData[%d]: %d\n", i, data[i]); //just to see the data we want to write
         r = libusb_bulk_transfer(_dev_handle, (_endpoint_address | LIBUSB_ENDPOINT_OUT), data, num_bytes, &actual, 0);
 
-        cout << "Writing Data..." << endl;
+        printf("Writing Data...\n");
         if(r == 0 && actual == num_bytes) //we wrote the bytes successfully
         {
-	        cout<<"Writing Successful!"<<endl;
+	        printf("Writing Successful!\n");
 	        return 1;
         }
         else
         {
-	        cout<<"Write Error"<<endl;
+	        printf("Write Error\n");
 	        return 0;
         }
 
     }
 
-    cout << "Writing mock radio" << endl;
+    printf("Writing to mock radio\n");
     return 1;
 
 }
@@ -130,10 +128,11 @@ int RadioUSB::usbClosingDevice()
 
         r = libusb_release_interface(_dev_handle, 0); //release the claimed interface
         if(r != 0) {
-	        cout<<"Cannot Release Interface"<<endl;
+	        printf("Cannot Release Interface\n");
 	        return 0;
         }
-        cout<<"Released Interface"<<endl;
+
+        printf("Released Interface\n");
         libusb_close(_dev_handle); //close the device we opened
         libusb_exit(_ctx); //needs to be called to end the
 
