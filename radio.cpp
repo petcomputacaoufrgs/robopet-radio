@@ -48,6 +48,7 @@ void Radio::coloca_na_string(char* aux,int nrobo, int* fm, int drible, int kick)
 		case 2: aux[i]|=0b11000000; break;
 		default: printf("erro!\n");
 	}
+
 	for (x=0;x<NUMMOTORES;x++)
 		if (fm[x]<0)
 		{
@@ -63,10 +64,11 @@ void Radio::coloca_na_string(char* aux,int nrobo, int* fm, int drible, int kick)
 	//vamos usar long long int pq sizeof(long long int)=8 e temos pelo menos 7 bytes a calcular (3 motores)
 	//vamos torcer pra nao inventarem de colocar mais do que 4 motores no protocolo!
 	aux1=0;
+
 	for (x=1;x<4+NUMMOTORES;x++)
 	{
-	 aux1 <<= 8; //primeiro desloca
-	 aux1 |= aux[x]&0xFF; //agora coloca o dado no aux
+        aux1 <<= 8; //primeiro desloca
+        aux1 |= aux[x]&0xFF; //agora coloca o dado no aux
 	}
 
 	aux1 %= CRC_POL; //pegamos o resto da divisao
@@ -161,7 +163,7 @@ void Radio::conecta(const char* device, const int baud, const int databits,
 
 void Radio::send(const int robotNumber, int* motorForces, const int drible, const int kick)
 {
-	//char message[500]; //moved to the class	
+	//char message[500]; //moved to the class
 	coloca_na_string(message, robotNumber, motorForces, drible, kick);
     //write(fd, message, 2+NUMMOTORES+5); //moved to realSend
 }

@@ -17,8 +17,8 @@ using namespace std;
 class RadioUSB
 {
 	public:
-		RadioUSB();
-		~RadioUSB();		
+		RadioUSB(bool dummy=false);
+		~RadioUSB();
 		/*usbInitializeDevice : intializes libusb-1.0 and our device according to the vendorId and productId
 								returns a handle to the device or NULL if we couldn't open the device
 		*/
@@ -32,12 +32,16 @@ class RadioUSB
 		/*int usbClosingDevice: closes our device and libusb-1.0
 								returns 1 if successful or 0
 		*/
-		int usbClosingDevice();		
+		int usbClosingDevice();
 
 	private:
-		libusb_device_handle *_dev_handle; //a device handle
-		libusb_context *_ctx; //a libusb session
-		int _vendorId, _productId, _endpoint_address;
+
+         //denotes that this radio has a fake connection, it won't send a thing
+        bool _dummy;
+
+        libusb_device_handle *_dev_handle; //a device handle
+        libusb_context *_ctx; //a libusb session
+        int _vendorId, _productId, _endpoint_address;
 
 		//Endpoint Definition (by eduardo): interface comum de entrada e saída
 };
@@ -45,3 +49,4 @@ class RadioUSB
 
 
 #endif
+

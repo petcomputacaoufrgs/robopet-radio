@@ -238,7 +238,9 @@ int kbhit(void)
 void initialize(int id, bool dummy)
 {
 
-	//radio.usbInitializeDevice(); //comment me if you want to test the code without the radio plugged in
+    radio = RadioUSB(dummy);
+
+    radio.usbInitializeDevice();
 
 	team_id = id;
 
@@ -259,7 +261,8 @@ int main(int argc, char **argv)
 	printf("Radio Running!\n");
 
 	// initializes everything, sets variables blah blah
-	initialize( (argc == 2 ? atoi(argv[1]) : 0) , true );
+	// false denotes that this is a mock connection
+	initialize( (argc == 2 ? atoi(argv[1]) : 0) , false );
 
 	clrscr();
 	int scrCount = 0;
@@ -286,5 +289,6 @@ int main(int argc, char **argv)
 	    }
 	}
 
-	radio.usbClosingDevice();
+    radio.usbClosingDevice();
 }
+
