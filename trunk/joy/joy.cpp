@@ -70,7 +70,7 @@ void Joystick::receiveInput(int mask, int x, int y, int z)
 		for (int i=0; i < ACTIONS_TOTAL; ++i)
 		{
 			//testa se cada um dos botões mapeados foi apertado
-				if (buttons[buttonMapping[i]] & mask)
+				if (__buttons[buttonMapping[i]] & mask)
 					currentActions[i] = true;
 				else
 					currentActions[i] = false;
@@ -121,6 +121,11 @@ vector<int> Joystick::getAxes()
 		return axes;
 }
 
+bool Joystick::isPressed(int button){
+
+		return currentActions[button];
+
+}
 vector<bool> Joystick::getButtonsPressed()
 {
 		vector<bool> actionsVector(ACTIONS_TOTAL);
@@ -198,4 +203,3 @@ void Joystick::printActions()
 		for (int i=0; i < ACTIONS_TOTAL; ++i)
 		  cout << actionStrings[i] << ": " << (currentActions[i] ? "Yes" : "No") << endl;
 }
-
