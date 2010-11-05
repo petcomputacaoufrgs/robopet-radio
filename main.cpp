@@ -110,9 +110,7 @@ void receive()
 			robots[i].current_theta = packet.aitoradio().robots(i).current_theta();
 
 			if(DEBUG)
-				printf("RECEIVE Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].force_x,
-																	robots[i].force_y, robots[i].displacement_theta,
-																	robots[i].kick, robots[i].drible);
+				printf("RECEIVE Robot %d: <%f, %f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", robots[i].id, robots[i].force_x, robots[i].force_y, robots[i].current_theta, robots[i].displacement_theta, robots[i].kick, robots[i].drible);
 		}
 	}
 	else
@@ -292,4 +290,3 @@ int main(int argc, char **argv)
 
     radio.usbClosingDevice();
 }
-
