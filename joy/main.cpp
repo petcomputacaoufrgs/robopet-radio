@@ -69,45 +69,48 @@ void sendToRadio() {
     float disp_theta = 360 * global_joy.getZ()/1000;
 
     r->set_displacement_x(0);
+	//this crazy test is for us to determine we are pressing or not the direction button in the joystick
+	//if not, we don't move the bot
     r->set_displacement_y((abs(global_joy.getX()) == 1000 ||
 						   abs(global_joy.getY()) == 1000  ) ?	1 : 0);
     r->set_displacement_theta(disp_theta);
 
-    r->set_kick(0);
-    r->set_drible(0);
+	r->set_kick(global_joy.isPressed(KICK));
+    r->set_drible(global_joy.isPressed(PASS));
     r->set_id(current_bot);
 
 	r->set_current_theta(calcCurrentTheta());
 
     joyToRadio.send(packet);
 
-	//printf("Sent AI to Radio\n");
-
 }
 
 void changeBot(int sinal) {
 
+	//if we are with the first or last bot, we do nothing
 	if(sinal < 0 && current_bot == 0) {}
 	else if(sinal > 0 && current_bot == 4) {}
+
 	else current_bot += sinal;
 }
 
 void JoystickFunc(unsigned int mask, int x, int y, int z)
 {
 
-		cout << endl << endl << "Robot " << current_bot << endl;
-		global_joy.receiveInput(mask,x,y,z);
+	cout << endl << endl << "Robot " << current_bot << endl;
+	global_joy.receiveInput(mask,x,y,z);
 
-		vector<bool> buttons = global_joy.getButtonsPressed();
-		for(unsigned int i = 0; i < buttons.size(); ++i)
-			cout << buttons[i] << " | ";
-		cout << endl;
-		global_joy.printStatus();
+	vector<bool> buttons = global_joy.getButtonsPressed();
+	for(unsigned int i = 0; i < buttons.size(); ++i)
+		cout << buttons[i] << " | ";
+	cout << endl;
+	global_joy.printStatus();
 
-		if(buttons[SHORYUKEN])
-			changeBot(INC);
-		if(buttons[BRAKE])
-			changeBot(DEC);
+	//SHORYUKEN and BRAKE are the names of the buttons -> joy.conf file
+	if(buttons[SHORYUKEN])
+		changeBot(INC);
+	if(buttons[BRAKE])
+		changeBot(DEC);
 
 }
 
