@@ -14,14 +14,6 @@
 #define WRITE_BYTE_NUMBER	5*NUM_ROBOTS
 #define SLEEP_TIME 			7250*5
 
-//RoboPETServer radiototracker(PORT_RADIO_TO_TRACKER, IP_RADIO_TO_TRACKER);
-RoboPETServer radiotosim(PORT_RADIO_TO_SIM, IP_RADIO_TO_SIM);
-RoboPETClient aitoradio(PORT_AI_TO_RADIO, IP_AI_TO_RADIO);
-
-int DEBUG = 1;
-int robot_total = NUM_ROBOTS;
-int team_id;
-
 typedef struct
 {
 	float force_x;
@@ -34,27 +26,37 @@ typedef struct
 	int id;
 } Robot;
 
-Robot robots[NUM_ROBOTS];
-RadioUSB radio;
-
 void sendToTracker();
 void sendToRobots();
 void sendToSimulator();
 
-double toRad(float degrees)
-{
-	return (degrees * 3.1415) / (float) 180;
-}
 
-bool inerciaBreaker = false;
-int inerciaCount = 0;
-int motor_index_mask[] = {2, 0, 1};
+// >>> HERE BE GLOBALS <<<
 
+//RoboPETServer radiototracker(PORT_RADIO_TO_TRACKER, IP_RADIO_TO_TRACKER);
+RoboPETServer radiotosim(PORT_RADIO_TO_SIM, IP_RADIO_TO_SIM);
+RoboPETClient aitoradio(PORT_AI_TO_RADIO, IP_AI_TO_RADIO);
+
+bool real_radio = true;
 
 int CLOCK_WISE_VELOCITY = 15,
     COUNTER_CLOCK_WISE_VELOCITY = 16,
     MIN_DIFF = 40,
 	MAX_FORCE = 127;
+
+bool DEBUG = false;
+int robot_total = NUM_ROBOTS;
+int team_id;
+
+Robot robots[NUM_ROBOTS];
+RadioUSB radio;
+
+// >>> END OF GLOBALS
+
+double toRad(float degrees)
+{
+	return (degrees * 3.1415) / (float) 180;
+}
 
 void giraAnda(int robotIndex)
 {
@@ -110,7 +112,7 @@ void receive()
 			robots[i].current_theta = packet.aitoradio().robots(i).current_theta();
 
 			if(DEBUG)
-				printf("RECEIVE Robot %d: <%f, %f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", robots[i].id, robots[i].force_x, robots[i].force_y, robots[i].current_theta, robots[i].displacement_theta, robots[i].kick, robots[i].drible);
+				printf("RECEIVE Robot %d: <%f,%f,%f> (%f degrees) (Kick = %d) (Drible = %d)\n", robots[i].id, robots[i].force_x, robots[i].force_y, robots[i].current_theta, robots[i].displacement_theta, robots[i].kick, robots[i].drible);
 		}
 	}
 	else
@@ -183,17 +185,21 @@ void sendToRobots()
 
 		if(DEBUG)
 		{
-			printf("SENDING Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", i, robots[i].force_x,
-																	robots[i].force_y, robots[i].displacement_theta,
-																	robots[i].kick, robots[i].drible);
+			printf("SENDING Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n",
+			i, 
+			robots[i].force_x,
+			robots[i].force_y, robots[i].displacement_theta,
+			robots[i].kick, robots[i].drible);
+
 			printf("%d = ", robots[i].id+1);
-			for(int j=0; j<3; j++)
+
+			for(int j=0; j<3; j++) {
 				printf("motor(%d): %d - ", j, robots[i].motorForces[j]);
+			}
+
 			printf("\n");
 		}
 
-		printf("                                                                     \n \
-		                                                                             \n");
 		data_send[i*NUM_ROBOTS    ] = robots[i].id;
 		data_send[i*NUM_ROBOTS + 1] = robots[i].motorForces[0];
 		data_send[i*NUM_ROBOTS + 2] = robots[i].motorForces[1];
@@ -234,14 +240,12 @@ int kbhit(void)
   return 0;
 }
 
-void initialize(int id, bool dummy)
+void initialize()
 {
 
-    radio = RadioUSB(dummy);
+    radio = RadioUSB(real_radio);
 
     radio.usbInitializeDevice();
-
-	team_id = id;
 
 	aitoradio.open(false);
 
@@ -254,6 +258,35 @@ void initialize(int id, bool dummy)
 
 }
 
+void parseOptions(int argc, char **argv)
+{
+	char ch;
+
+	while((ch = getopt(argc, argv, "dDt:n:i:p:")) != EOF) {
+		switch(ch) {
+			case 'D': DEBUG = true; 
+			break;
+
+			case 't': team_id = atoi(optarg); 
+			break;
+
+			case 'n': robot_total = atoi(optarg); 
+			break;
+
+			case 'd': real_radio = false; 
+			break;
+
+//			in the future set the ip and port of the sockets if it makes sense
+//			case 'i': hostname = optarg; 
+//			break;
+
+//			case 'p': port = atoi(optarg); 
+//			break;
+		}
+	}
+
+}
+
 int main(int argc, char **argv)
 {
 
@@ -261,7 +294,10 @@ int main(int argc, char **argv)
 
 	// initializes everything, sets variables blah blah
 	// false denotes that this is a mock connection
-	initialize( (argc == 2 ? atoi(argv[1]) : 0) , false );
+
+	parseOptions(argc,argv);
+
+	initialize( );
 
 	clrscr();
 	int scrCount = 0;
