@@ -29,21 +29,21 @@ static string buttonStrings[BUTTONS_TOTAL] = { "BUTTON_1","BUTTON_2","BUTTON_3",
 
 enum {
 		KICK = 0,
-		PASS,
+		DRIBBLE,
 		CHIP_KICK,
-		DRIVE,
-		BRAKE,
+		TATSUMAKI_SENPUU_KYAKU,
+		DEC_BOT,
 
-		HADOUKEN,
-		SHORYUKEN,
-		MEGABUSTER,
-		Z_SABER,
-		JUMP,
+		DEC_FORCE,
+		INC_BOT,
+		INC_FORCE,
+		DEC_MOTOR,
+		INC_MOTOR,
 		ACTIONS_TOTAL
 };
 
-static string actionStrings[ACTIONS_TOTAL] = { "KICK", "PASS", "CHIP_KICK",
-											   "DRIVE", "BRAKE", "HADOUKEN", "SHORYUKEN", "MEGABUSTER", "Z-SABER", "JUMP"
+static string actionStrings[ACTIONS_TOTAL] = { "KICK", "DRIBBLE", "CHIP_KICK",
+											   "TATSUMAKI_SENPUU_KYAKU", "DEC_BOT", "DEC_FORCE", "INC_BOT", "INC_FORCE", "DEC_MOTOR", "INC_MOTOR"
 		 };
 
 class Joystick {
