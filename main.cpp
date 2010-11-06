@@ -262,8 +262,12 @@ void parseOptions(int argc, char **argv)
 {
 	char ch;
 
-	while((ch = getopt(argc, argv, "dDt:n:i:p:")) != EOF) {
+	while((ch = getopt(argc, argv, "jdDt:n:i:p:")) != EOF) {
 		switch(ch) {
+
+			case 'j': //abre sock do joy
+			break;
+
 			case 'D': DEBUG = true; 
 			break;
 
