@@ -9,7 +9,6 @@
 #include "radio_usb.h"
 #include "vector.h"
 
-#define PI 					acos(-1)
 #define NUM_ROBOTS 			5
 #define WRITE_BYTE_NUMBER	5*NUM_ROBOTS
 #define SLEEP_TIME 			7250*5
@@ -66,19 +65,38 @@ double toRad(float degrees)
 void giraAnda(int robotIndex)
 {
 	Vector desl(robots[robotIndex].force_x, -1*robots[robotIndex].force_y);
-	Vector normal(cos(robots[robotIndex].current_theta*3.1415/180), sin(robots[robotIndex].current_theta*3.1415/180));
+	Vector normal(cos(robots[robotIndex].current_theta*RP::PI/180), sin(robots[robotIndex].current_theta*RP::PI/180));
 
+	float angle = normal.angleDegrees(desl);
+	if(desl.getX() < 0)
+		angle = 360 - angle;
 
-	float angle = desl.angleDegrees(normal);
-
-	printf("Trague-o: %f,%f\n", normal.getX(), normal.getY());
+	printf("Vetor frente: %f,%f\n", normal.getX(), normal.getY());
 	printf("Angle %f\n", angle);
 
-	 if(angle < MIN_DIFF) {
+	if(robots[robotIndex].displacement_theta != 0) {
+		if(robots[robotIndex].displacement_theta > 0) {
+			printf("horario\n");
+			for(int i=0; i < 3; i++)
+				robots[robotIndex].motorForces[i] = int(MAX_FORCE*2/10) | 128;
+		}
+		else {
+			printf("antihorario\n");
+			for(int i=0; i < 3; i++)
+				robots[robotIndex].motorForces[i] = MAX_FORCE*2/10;
+		}
+	}
+	else if(desl.getX() == 0 && desl.getY() == 0) {
+		//parado ai
+		printf("paradin\n");
+		for(int i=0; i < 3; i++)
+			robots[robotIndex].motorForces[i] = 0;
+	}
+	else if(angle < MIN_DIFF || angle > 360 - MIN_DIFF) {
 		printf("ahead ahoy!\n");
-		robots[robotIndex].motorForces[0] = MAX_FORCE*6/10;
+		robots[robotIndex].motorForces[0] = (MAX_FORCE)*8/10 | 128;
         robots[robotIndex].motorForces[1] = 0;
-        robots[robotIndex].motorForces[2] = (MAX_FORCE*6/10) | 128;
+        robots[robotIndex].motorForces[2] = MAX_FORCE*8/10;
 	}
 	else if(angle > MIN_DIFF && angle <= 180) {
 		//horario
@@ -86,17 +104,11 @@ void giraAnda(int robotIndex)
 		for(int i=0; i < 3; i++)
 			robots[robotIndex].motorForces[i] = int(MAX_FORCE*2/10) | 128;
 	}
-	else if(angle > MIN_DIFF && angle > 180) {
+	else {
 		//antihorario mano
 		printf("antihorario\n");
 		for(int i=0; i < 3; i++)
 			robots[robotIndex].motorForces[i] = MAX_FORCE*2/10;
-	}
-	else {
-		//parado ai
-		printf("paradin\n");
-		for(int i=0; i < 3; i++)
-			robots[robotIndex].motorForces[i] = 0;
 	}
 	
 	for(int i = 0; i < 3; i++)
@@ -229,6 +241,7 @@ void sendToSim()
 
 void send()
 {
+
 	//sendToTracker();
 	//sendToSim();
 	sendToRobots(real_radio);
@@ -282,7 +295,7 @@ void sendToRobots(bool toRadio)
 
 	if(toRadio) {
 		radio.usbSendData( data_send, WRITE_BYTE_NUMBER );
-		usleep(SLEEP_TIME);
+		//usleep(SLEEP_TIME);
 	}
 
 }
@@ -403,5 +416,6 @@ int main(int argc, char **argv)
 	    }
 	}
 
-    radio.usbClosingDevice();
+	if(real_radio)
+		radio.usbClosingDevice();
 }

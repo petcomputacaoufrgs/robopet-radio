@@ -96,24 +96,24 @@ int RadioUSB::usbSendData( unsigned char *data, int num_bytes )
         int r; //for return values
 
         for(int i = 0; i < num_bytes; i++)
-	        printf("\nData[%d]: %d\n", i, data[i]); //just to see the data we want to write
+	        ;//printf("\nData[%d]: %d\n", i, data[i]); //just to see the data we want to write
         r = libusb_bulk_transfer(_dev_handle, (_endpoint_address | LIBUSB_ENDPOINT_OUT), data, num_bytes, &actual, 0);
 
-        printf("Writing Data...\n");
+        //printf("Writing Data...\n");
         if(r == 0 && actual == num_bytes) //we wrote the bytes successfully
         {
-	        printf("Writing Successful!\n");
+	        //printf("Writing Successful!\n");
 	        return 1;
         }
         else
         {
-	        printf("Write Error\n");
+	        //printf("Write Error\n");
 	        return 0;
         }
 
     }
 
-    printf("Writing to mock radio\n");
+    //printf("Writing to mock radio\n");
     return 1;
 
 }
