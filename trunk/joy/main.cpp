@@ -71,16 +71,22 @@ void sendToRadio() {
 
     AIToRadio::Robot *r = aitoradioPacket->add_robots();
 
-    RP::Vector disp(global_joy.getX(), global_joy.getY());
-    disp.normalizeMe();
-
     float disp_theta = 360 * global_joy.getZ()/1000;
     float analogic_angle = calcAnalogicTheta();
-
-    r->set_displacement_x(cos(analogic_angle*3.1415/180));
-	//this crazy test is for us to determine we are pressing or not the direction button in the joystick
+    
+    RP::Vector disp;
+    
+    //this crazy test is for us to determine we are pressing or not the direction button in the joystick
 	//if not, we don't move the bot
-    r->set_displacement_y(sin(analogic_angle*3.1415/180));
+    if(global_joy.getX() == 0 && global_joy.getY() == 0)
+		disp = RP::Vector(0,0);
+	else
+		disp = RP::Vector(cos(analogic_angle*RP::PI/180), -sin(analogic_angle*RP::PI/180));
+		
+    disp.normalizeMe();
+
+    r->set_displacement_x(disp.getX());
+    r->set_displacement_y(disp.getY());
     r->set_displacement_theta(disp_theta);
 
 	r->set_kick(global_joy.isPressed(KICK));
@@ -88,13 +94,18 @@ void sendToRadio() {
     r->set_chip_kick(global_joy.isPressed(CHIP_KICK));
     r->set_id(current_bot);
 
-	r->set_current_theta(0);
+	r->set_current_theta(90);
 	
 	joytoradioPacket->set_force_0(forces[current_bot][0]);
 	joytoradioPacket->set_force_1(forces[current_bot][1]);
 	joytoradioPacket->set_force_2(forces[current_bot][2]);
+	
+	if (global_joy.isPressed(TATSUMAKI_SENPUU_KYAKU)) {
+		system("aplay todo &");
+	}
+	
 	joytoradioPacket->set_secret_attack(global_joy.isPressed(TATSUMAKI_SENPUU_KYAKU));
-
+	
     joyToRadio.send(packet);
 
 }
@@ -151,10 +162,11 @@ void JoystickFunc(unsigned int mask, int x, int y, int z)
 		changeForce(INC);
 	if(buttons[DEC_FORCE])
 		changeForce(DEC);
+	sendToRadio();
 }
 
 void idleFunc() {
-	sendToRadio();
+	//sendToRadio();
 }
 
 int main(int argc, char **argv)
@@ -174,7 +186,7 @@ int main(int argc, char **argv)
     //registra na glut os callbacks
     glutDisplayFunc(RenderScene);
     //chama de 100 em 100 ms
-    glutJoystickFunc(JoystickFunc,100);
+    glutJoystickFunc(JoystickFunc,250);
 
 	glutIdleFunc(idleFunc);
 
