@@ -6,6 +6,7 @@
 #include "joy.h"
 #include "rp_server.h"
 #include "vector.h"
+#include <ctime>
 
 #define INC 1
 #define DEC -1
@@ -21,6 +22,13 @@ RoboPETServer joyToRadio(PORT_JOY_TO_RADIO, IP_JOY_TO_RADIO);
 int current_bot = 0;
 int current_motor = 0;
 int forces[5][3] = {{0}};
+
+time_t startedPlaying;
+
+bool isNotPlaying() {
+	time_t curTime = time(NULL);
+	return difftime(curTime, startedPlaying) > 1.38;
+}
 
 
 void SetupRC(void)
@@ -100,8 +108,9 @@ void sendToRadio() {
 	joytoradioPacket->set_force_1(forces[current_bot][1]);
 	joytoradioPacket->set_force_2(forces[current_bot][2]);
 	
-	if (global_joy.isPressed(TATSUMAKI_SENPUU_KYAKU)) {
+	if (global_joy.isPressed(TATSUMAKI_SENPUU_KYAKU) && isNotPlaying()) {
 		system("aplay todo &");
+		startedPlaying = time(NULL);
 	}
 	
 	joytoradioPacket->set_secret_attack(global_joy.isPressed(TATSUMAKI_SENPUU_KYAKU));
