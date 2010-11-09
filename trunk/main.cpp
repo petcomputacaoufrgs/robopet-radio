@@ -31,6 +31,12 @@ void sendToTracker();
 void sendToRobots(bool toRadio);
 void sendToSimulator();
 
+void receive();
+void receiveFromAI();
+void receiveFromJoy();
+int kbhit();
+
+
 
 // >>> HERE BE GLOBALS <<<
 
@@ -69,9 +75,7 @@ void giraAnda(int robotIndex)
 	Vector desl(robots[robotIndex].force_x, -1*robots[robotIndex].force_y);
 	Vector normal(cos(robots[robotIndex].current_theta*RP::PI/180), sin(robots[robotIndex].current_theta*RP::PI/180));
 
-	float angle = normal.angleDegrees(desl);
-	if(desl.getX() < 0)
-		angle = 360 - angle;
+	float angle = normal.angleCWDegrees(desl);
 
 	printf("Vetor frente: %f,%f\n", normal.getX(), normal.getY());
 	printf("Angle %f\n", angle);
@@ -112,10 +116,6 @@ void giraAnda(int robotIndex)
 		for(int i=0; i < 3; i++)
 			robots[robotIndex].motorForces[i] = MAX_FORCE*2/10;
 	}
-	
-	if(robots[robotIndex].secret_attack)
-		for(int k = 0; k < 3; k++)
-			robots[robotIndex].motorForces[k] = MAX_FORCE;
 }
 
 void send()
@@ -154,10 +154,32 @@ void calcForces(int robotIndex) {
 	Vector desl(robots[robotIndex].force_x, -1*robots[robotIndex].force_y);
 	Vector normal(cos(robots[robotIndex].current_theta*RP::PI/180), sin(robots[robotIndex].current_theta*RP::PI/180));
 
-	float phi = normal.angleCCWDegrees(desl);
+	float phi = normal.angleCWDegrees(desl);
 	
-	for(int i = 0; i < 3; i++)
-		robots[robotIndex].motorForces[i] = cos(theta[i] + phi + 90) * MAX_FORCE;
+	printf("Phi: %f\n", phi);
+	
+	if(robots[robotIndex].displacement_theta != 0) {
+		if(robots[robotIndex].displacement_theta > 0) {
+			printf("horario\n");
+			for(int i=0; i < 3; i++)
+				robots[robotIndex].motorForces[i] = -MAX_FORCE*2/10;
+		}
+		else {
+			printf("antihorario\n");
+			for(int i=0; i < 3; i++)
+				robots[robotIndex].motorForces[i] = MAX_FORCE*2/10;
+		}
+	}
+	else if(desl.getX() == 0 && desl.getY() == 0) {
+		//parado ai
+		printf("paradin\n");
+		for(int i=0; i < 3; i++)
+			robots[robotIndex].motorForces[i] = 0;
+	}
+	else {
+		for(int i = 0; i < 3; i++)
+			robots[robotIndex].motorForces[i] = cos((theta[i] + phi + 90)*RP::PI/180) * (MAX_FORCE);
+	}
 }
 
 void sendToRobots(bool toRadio)
@@ -177,10 +199,14 @@ void sendToRobots(bool toRadio)
 
 	for(int i=0; i < robot_total; i+=1)
 	{
-	    giraAnda(i);
-	    //calcForces(i);
+	    //giraAnda(i);
+	    calcForces(i);
 	    
 	    applyAdjustments(i);
+	    
+	    if(robots[i].secret_attack)
+		for(int k = 0; k < 3; k++)
+			robots[i].motorForces[k] = MAX_FORCE;
 
 		if(DEBUG)
 		{
@@ -375,9 +401,9 @@ void receiveFromJoy() {
 			robots[i].id = aitoradio.robots(i).id();
 			robots[i].current_theta = aitoradio.robots(i).current_theta();
 			
-			forceAdjustment[robots[i].id][0] = packet.joytoradio().force_0();
-			forceAdjustment[robots[i].id][1] = packet.joytoradio().force_1();
-			forceAdjustment[robots[i].id][2] = packet.joytoradio().force_2();
+			forceAdjustment[i][0] = packet.joytoradio().force_0();
+			forceAdjustment[i][1] = packet.joytoradio().force_1();
+			forceAdjustment[i][2] = packet.joytoradio().force_2();
 			
 			robots[i].secret_attack = packet.joytoradio().secret_attack();
 
