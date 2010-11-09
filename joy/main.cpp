@@ -79,8 +79,10 @@ void sendToRadio() {
 
     AIToRadio::Robot *r = aitoradioPacket->add_robots();
 
+	RP::Vector analog(global_joy.getX(), global_joy.getY());
+	
     float disp_theta = 360 * global_joy.getZ()/1000;
-    float analogic_angle = calcAnalogicTheta();
+    float analogic_angle = analog.angleCCW(RP::Vector(1,0));//calcAnalogicTheta();
     
     RP::Vector disp;
     
