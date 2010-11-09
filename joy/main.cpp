@@ -46,30 +46,6 @@ void RenderScene(void)
      glutSwapBuffers();
 }
 
-double calcAnalogicTheta() {
-
-	double theta=0;
-
-	if(global_joy.getY() == 1000) {
-		theta = 90 - 45 * global_joy.getX()/1000;
-	}
-	else if (global_joy.getX() == -1000) {
-		theta = 180 - 45 * global_joy.getY()/1000;
-	}
-	else if (global_joy.getY() == -1000) {
-		theta = 270 + 45 * global_joy.getX()/1000;
-	}
-	else if (global_joy.getX() == 1000) {
-		theta = 360 + 45 * global_joy.getY()/1000;
-	}
-
-	if (theta >= 360) {
-		theta -= 360;
-	}
-
-	return theta;
-}
-
 void sendToRadio() {
 
     RoboPET_WrapperPacket packet;
@@ -79,19 +55,14 @@ void sendToRadio() {
 
     AIToRadio::Robot *r = aitoradioPacket->add_robots();
 
-	RP::Vector analog(global_joy.getX(), global_joy.getY());
+	RP::Vector disp(global_joy.getX(), global_joy.getY());
 	
     float disp_theta = 360 * global_joy.getZ()/1000;
-    float analogic_angle = analog.angleCCW(RP::Vector(1,0));//calcAnalogicTheta();
-    
-    RP::Vector disp;
     
     //this crazy test is for us to determine we are pressing or not the direction button in the joystick
 	//if not, we don't move the bot
     if(global_joy.getX() == 0 && global_joy.getY() == 0)
 		disp = RP::Vector(0,0);
-	else
-		disp = RP::Vector(cos(analogic_angle*RP::PI/180), -sin(analogic_angle*RP::PI/180));
 		
     disp.normalizeMe();
 

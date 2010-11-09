@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <math.h>
+#include <cfloat>
 
 #include "rp_client.h"
 #include "rp_server.h"
@@ -72,7 +73,7 @@ double toRad(float degrees)
 
 void giraAnda(int robotIndex)
 {
-	Vector desl(robots[robotIndex].force_x, -1*robots[robotIndex].force_y);
+	Vector desl(robots[robotIndex].force_x, robots[robotIndex].force_y);
 	Vector normal(cos(robots[robotIndex].current_theta*RP::PI/180), sin(robots[robotIndex].current_theta*RP::PI/180));
 
 	float angle = normal.angleCWDegrees(desl);
@@ -129,8 +130,12 @@ void send()
 void applyAdjustments(int robotIndex) {
 	
 	for(int i = 0; i < 3; i++)
-		if(robots[robotIndex].motorForces[i] != 0)
-			robots[robotIndex].motorForces[i] += forceAdjustment[robotIndex][i];
+		if(robots[robotIndex].motorForces[i] != 0) {
+			if(robots[robotIndex].motorForces[i] > 0)
+				robots[robotIndex].motorForces[i] += forceAdjustment[robotIndex][i];
+			else
+				robots[robotIndex].motorForces[i] -= forceAdjustment[robotIndex][i];
+			}
 }
 
 
@@ -151,7 +156,7 @@ int realForce(int force) {
 
 void calcForces(int robotIndex) {
 	
-	Vector desl(robots[robotIndex].force_x, -1*robots[robotIndex].force_y);
+	Vector desl(robots[robotIndex].force_x, robots[robotIndex].force_y);
 	Vector normal(cos(robots[robotIndex].current_theta*RP::PI/180), sin(robots[robotIndex].current_theta*RP::PI/180));
 
 	float phi = normal.angleCWDegrees(desl);
@@ -177,8 +182,18 @@ void calcForces(int robotIndex) {
 			robots[robotIndex].motorForces[i] = 0;
 	}
 	else {
-		for(int i = 0; i < 3; i++)
-			robots[robotIndex].motorForces[i] = cos((theta[i] + phi + 90)*RP::PI/180) * (MAX_FORCE);
+		float major = FLT_MIN;
+		float cosins[3] = {};
+		
+		for(int i = 0; i < 3; i++) {
+			cosins[i] = cos((theta[i] + phi + 90)*RP::PI/180);
+			if(cosins[i] > major)
+				major = cosins[i];
+		}
+		for(int i = 0; i < 3; i++) {
+			robots[robotIndex].motorForces[i] = (cosins[i] / major) * (MAX_FORCE*3/10);
+			
+		}
 	}
 }
 
