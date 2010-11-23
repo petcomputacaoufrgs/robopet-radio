@@ -128,7 +128,7 @@ void send()
 }
 
 void applyAdjustments(int robotIndex) {
-	
+
 	for(int i = 0; i < 3; i++)
 		if(robots[robotIndex].motorForces[i] != 0) {
 			if(robots[robotIndex].motorForces[i] > 0)
@@ -140,42 +140,44 @@ void applyAdjustments(int robotIndex) {
 
 
 int realForce(int force) {
-	
+
 	int trueForce = force;
-	
+
 	if(force > 127)
 		trueForce = 127;
 	else if(force < -127)
 		force = -127;
-		
+
 	if(force < 0)
 		trueForce = (-force) | 128;
-		
+
 	return trueForce;
 }
 
 void calcForces(int robotIndex) {
-	
+
 	Vector desl(robots[robotIndex].force_x, robots[robotIndex].force_y);
 	Vector normal(cos(robots[robotIndex].current_theta*RP::PI/180), sin(robots[robotIndex].current_theta*RP::PI/180));
 
 	float phi = normal.angleCWDegrees(desl);
-	
+
 	printf("Phi: %f\n", phi);
-	
-	if(robots[robotIndex].displacement_theta != 0) {
-		if(robots[robotIndex].displacement_theta > 0) {
-			printf("horario\n");
-			for(int i=0; i < 3; i++)
-				robots[robotIndex].motorForces[i] = -MAX_FORCE*2/10;
-		}
-		else {
-			printf("antihorario\n");
-			for(int i=0; i < 3; i++)
-				robots[robotIndex].motorForces[i] = MAX_FORCE*2/10;
-		}
-	}
-	else if(desl.getX() == 0 && desl.getY() == 0) {
+
+//	if(robots[robotIndex].displacement_theta != 0) {
+//		if(robots[robotIndex].displacement_theta > 0) {
+//			printf("horario\n");
+//			for(int i=0; i < 3; i++)
+//				robots[robotIndex].motorForces[i] = (robots[robotIndex].displacement_theta)/2;
+//		}
+//		else {
+//			printf("antihorario\n");
+//			for(int i=0; i < 3; i++)
+//				robots[robotIndex].motorForces[i] = MAX_FORCE*2/10;
+//		}
+//	}
+
+	if(	(desl.getX() == 0) && (desl.getY() == 0) &&
+		(robots[robotIndex].displacement_theta == 0)) {
 		//parado ai
 		printf("paradin\n");
 		for(int i=0; i < 3; i++)
@@ -183,18 +185,30 @@ void calcForces(int robotIndex) {
 	}
 	else {
 		float major = FLT_MIN;
-		float cosins[3] = {};
-		
+		float cosins[3] = {0,0,0};
+
 		for(int i = 0; i < 3; i++) {
 			cosins[i] = cos((theta[i] + phi + 90)*RP::PI/180);
-			if(cosins[i] > major)
-				major = cosins[i];
+			if(abs(cosins[i]) > major)
+				major = abs(cosins[i]);
 		}
+
+		//if we just want to rotate the robot, we clear the cosins in order to
+		//make the robot rotate -> (cosins[i] / major) == 0!
+		if ((desl.getX() == 0) && (desl.getY() == 0)) {
+			major = 1;
+			for(int i = 0; i < 3; i++) {
+				cosins[i] = 0;
+			}
+		}
+
 		for(int i = 0; i < 3; i++) {
-			robots[robotIndex].motorForces[i] = (cosins[i] / major) * (MAX_FORCE*3/10);
-			
+			robots[robotIndex].motorForces[i] =
+				((cosins[i] / major) * (MAX_FORCE*3/10) +
+				(robots[robotIndex].displacement_theta /2));
 		}
 	}
+
 }
 
 void sendToRobots(bool toRadio)
@@ -216,9 +230,9 @@ void sendToRobots(bool toRadio)
 	{
 	    //giraAnda(i);
 	    calcForces(i);
-	    
+
 	    applyAdjustments(i);
-	    
+
 	    if(robots[i].secret_attack)
 		for(int k = 0; k < 3; k++)
 			robots[i].motorForces[k] = MAX_FORCE;
@@ -226,15 +240,15 @@ void sendToRobots(bool toRadio)
 		if(DEBUG)
 		{
 			printf("SENDING Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d) (Chip Kick = %d)\n",
-			robots[i].id, 
+			robots[i].id,
 			robots[i].force_x,
 			robots[i].force_y, robots[i].displacement_theta,
 			robots[i].kick, robots[i].drible,
 			robots[i].chip_kick);
-			
-			for(int j=0; j<3; j++)
-				printf("adjustement(%d): %d - ", j, forceAdjustment[i][j]);
-			printf("\n");
+
+//			for(int j=0; j<3; j++)
+//				printf("adjustement(%d): %d - ", j, forceAdjustment[i][j]);
+//			printf("\n");
 
 			for(int j=0; j<3; j++) {
 				printf("motor(%d): %d(%d) - ", j, realForce(robots[i].motorForces[j]), robots[i].motorForces[j]);
@@ -286,23 +300,23 @@ void parseOptions(int argc, char **argv)
 			case 'j': //abre sock do joy
 			break;
 
-			case 'D': DEBUG = true; 
+			case 'D': DEBUG = true;
 			break;
 
-			case 't': team_id = atoi(optarg); 
+			case 't': team_id = atoi(optarg);
 			break;
 
-			case 'n': robot_total = atoi(optarg); 
+			case 'n': robot_total = atoi(optarg);
 			break;
 
-			case 'd': real_radio = false; 
+			case 'd': real_radio = false;
 			break;
 
 //			in the future set the ip and port of the sockets if it makes sense
-//			case 'i': hostname = optarg; 
+//			case 'i': hostname = optarg;
 //			break;
 
-//			case 'p': port = atoi(optarg); 
+//			case 'p': port = atoi(optarg);
 //			break;
 		}
 	}
@@ -359,7 +373,7 @@ void receive()
 
 
 void receiveFromAI() {
-	
+
 	RoboPET_WrapperPacket packet;
 	if (aitoradio.receive(packet) && packet.has_aitoradio()) {
 		printf("----------------------------");
@@ -391,10 +405,10 @@ void receiveFromAI() {
 }
 
 void receiveFromJoy() {
-	
+
 	RoboPET_WrapperPacket packet;
 	if(joytoradio.receive(packet) && packet.has_joytoradio()) {
-		
+
 		printf("----------------------------");
 		printf("Received Joy-To-Radio!\n");
 
@@ -415,11 +429,11 @@ void receiveFromJoy() {
 			robots[i].drible = aitoradio.robots(i).drible();
 			robots[i].id = aitoradio.robots(i).id();
 			robots[i].current_theta = aitoradio.robots(i).current_theta();
-			
+
 			forceAdjustment[i][0] = packet.joytoradio().force_0();
 			forceAdjustment[i][1] = packet.joytoradio().force_1();
 			forceAdjustment[i][2] = packet.joytoradio().force_2();
-			
+
 			robots[i].secret_attack = packet.joytoradio().secret_attack();
 
 			if(DEBUG) {
