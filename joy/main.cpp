@@ -56,14 +56,14 @@ void sendToRadio() {
     AIToRadio::Robot *r = aitoradioPacket->add_robots();
 
 	RP::Vector disp(global_joy.getX(), global_joy.getY());
-	
-    float disp_theta = 360 * global_joy.getZ()/1000;
-    
+
+    float disp_theta = 127 * global_joy.getZ()/1000;
+
     //this crazy test is for us to determine we are pressing or not the direction button in the joystick
 	//if not, we don't move the bot
     if(global_joy.getX() == 0 && global_joy.getY() == 0)
 		disp = RP::Vector(0,0);
-		
+
     disp.normalizeMe();
 
     r->set_displacement_x(disp.getX());
@@ -76,18 +76,18 @@ void sendToRadio() {
     r->set_id(current_bot);
 
 	r->set_current_theta(90);
-	
+
 	joytoradioPacket->set_force_0(forces[current_bot][0]);
 	joytoradioPacket->set_force_1(forces[current_bot][1]);
 	joytoradioPacket->set_force_2(forces[current_bot][2]);
-	
+
 	if (global_joy.isPressed(TATSUMAKI_SENPUU_KYAKU) && isNotPlaying()) {
 		system("aplay todo &");
 		startedPlaying = time(NULL);
 	}
-	
+
 	joytoradioPacket->set_secret_attack(global_joy.isPressed(TATSUMAKI_SENPUU_KYAKU));
-	
+
     joyToRadio.send(packet);
 
 }
@@ -105,7 +105,7 @@ void changeBot(int sinal) {
 }
 
 void changeMotor(int sinal) {
-	
+
 	//if we are with the first or last bot, we do nothing
 	if(sinal < 0 && current_motor == 0) {}
 	else if(sinal > 0 && current_motor == MAX_MOTOR_INDEX) {}
@@ -114,7 +114,7 @@ void changeMotor(int sinal) {
 }
 
 void changeForce(int sinal) {
-	
+
 	forces[current_bot][current_motor] += sinal;
 }
 
@@ -123,7 +123,7 @@ void JoystickFunc(unsigned int mask, int x, int y, int z)
 
 	cout << endl << endl << "Robot " << current_bot << endl;
 	cout << "Motor: " << current_motor << "Ajuste fino<" << forces[current_bot][0] << "," << forces[current_bot][1] << "," << forces[current_bot][2] << ">\n";
-		
+
 	global_joy.receiveInput(mask,x,y,z);
 
 	vector<bool> buttons = global_joy.getButtonsPressed();
