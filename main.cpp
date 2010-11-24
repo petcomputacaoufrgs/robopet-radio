@@ -163,35 +163,8 @@ void calcForces(int robotIndex) {
 
 	printf("Phi: %f\n", phi);
 
-//	if(robots[robotIndex].displacement_theta != 0) {
-//		if(robots[robotIndex].displacement_theta > 0) {
-//			printf("horario\n");
-//			for(int i=0; i < 3; i++)
-//				robots[robotIndex].motorForces[i] = (robots[robotIndex].displacement_theta)/2;
-//		}
-//		else {
-//			printf("antihorario\n");
-//			for(int i=0; i < 3; i++)
-//				robots[robotIndex].motorForces[i] = MAX_FORCE*2/10;
-//		}
-//	}
-
-	if(	(desl.getX() == 0) && (desl.getY() == 0) &&
-		(robots[robotIndex].displacement_theta == 0)) {
-		//parado ai
-		printf("paradin\n");
-		for(int i=0; i < 3; i++)
-			robots[robotIndex].motorForces[i] = 0;
-	}
-	else {
 		float major = FLT_MIN;
 		float cosins[3] = {0,0,0};
-
-		for(int i = 0; i < 3; i++) {
-			cosins[i] = cos((theta[i] + phi + 90)*RP::PI/180);
-			if(abs(cosins[i]) > major)
-				major = abs(cosins[i]);
-		}
 
 		//if we just want to rotate the robot, we clear the cosins in order to
 		//make the robot rotate -> (cosins[i] / major) == 0!
@@ -201,13 +174,19 @@ void calcForces(int robotIndex) {
 				cosins[i] = 0;
 			}
 		}
+		else {
+			for(int i = 0; i < 3; i++) {
+				cosins[i] = cos((theta[i] + phi + 90)*RP::PI/180);
+				if(abs(cosins[i]) > major)
+					major = abs(cosins[i]);
+			}
+		}
 
 		for(int i = 0; i < 3; i++) {
 			robots[robotIndex].motorForces[i] =
-				((cosins[i] / major) * (MAX_FORCE*3/10) +
+				((cosins[i] / major) * (MAX_FORCE*3/10) -
 				(robots[robotIndex].displacement_theta /2));
 		}
-	}
 
 }
 
