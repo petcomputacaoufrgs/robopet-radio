@@ -51,7 +51,7 @@ bool real_radio = true;
 int CLOCK_WISE_VELOCITY = 15,
     COUNTER_CLOCK_WISE_VELOCITY = 16,
     MIN_DIFF = 30,
-	MAX_FORCE = 120;
+	MAX_FORCE = 127;
 
 bool DEBUG = true;
 int robot_total = NUM_ROBOTS;
