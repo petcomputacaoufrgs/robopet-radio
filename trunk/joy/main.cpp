@@ -8,6 +8,9 @@
 #include "vector.h"
 #include <ctime>
 
+#include <fcntl.h>
+#include <linux/joystick.h>
+
 #define INC 1
 #define DEC -1
 
@@ -33,18 +36,13 @@ bool isNotPlaying() {
 
 void SetupRC(void)
 {
-		if (global_joy.isConfigured())
-		{
-			global_joy.loadConfig();
-		}
-
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	if (global_joy.isConfigured())
+	{
+		global_joy.loadConfig();
+	}
 }
 
-void RenderScene(void)
-{
-     glutSwapBuffers();
-}
+
 
 void sendToRadio() {
 
@@ -147,8 +145,34 @@ void JoystickFunc(unsigned int mask, int x, int y, int z)
 	sendToRadio();
 }
 
-void idleFunc() {
-	//sendToRadio();
+int openDevice(const char* device) {
+	int fd = open(device, 0 );
+	fcntl(fd, F_SETFL, O_RDONLY | O_NONBLOCK);
+
+	return fd;
+}
+
+int amain(int argc, char** argv) {
+
+	unsigned int len = 0;
+	struct js_event msg;
+
+	int fd = openDevice( "/dev/input/js0" );
+
+	while(1) {
+		len = read(fd, &msg, sizeof(msg));
+
+		if (len == sizeof(msg)) { //read was succesfull
+
+			if (msg.type == JS_EVENT_BUTTON) { // seems to be a key press		
+				JoystickFunc(msg.value,0,0,0);
+			}
+
+		} 
+	}
+
+	return 0;
+
 }
 
 int main(int argc, char **argv)
@@ -159,21 +183,8 @@ int main(int argc, char **argv)
 
     joyToRadio.open();
 
-	glutInit(&argc, argv);
-
-	//so para mostrar na tela
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-    //tela
-    glutCreateWindow("RoboPET Joy Control");
-    //registra na glut os callbacks
-    glutDisplayFunc(RenderScene);
-    //chama de 100 em 100 ms
-    glutJoystickFunc(JoystickFunc,250);
-
-	glutIdleFunc(idleFunc);
 
     SetupRC();
-    glutMainLoop();
 
     return 0;
 }
