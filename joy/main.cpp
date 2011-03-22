@@ -42,7 +42,15 @@ void SetupRC(void)
 	}
 }
 
+void dump_event(struct js_event e) {
 
+	printf("----\n");
+	printf("time: %d\n", e.time);
+	printf("value: %s\n", e.value == 1 ? "DOWN" : "UP" );
+	printf("type: %d\n", e.type);
+	printf("number: %d\n", e.number);
+
+}
 
 void sendToRadio() {
 
@@ -165,7 +173,8 @@ int amain(int argc, char** argv) {
 		if (len == sizeof(msg)) { //read was succesfull
 
 			if (msg.type == JS_EVENT_BUTTON) { // seems to be a key press
-				JoystickFunc(msg.value,0,0,0);
+				JoystickFunc( 1 << msg.number , 0,0,0);
+				//dump_event(msg);
 			}
 
 		}
@@ -189,4 +198,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
