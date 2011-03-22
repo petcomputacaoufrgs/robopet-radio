@@ -63,18 +63,21 @@ void Joystick::printStatus()
 		printActions();
 }
 
-void Joystick::receiveInput(int mask, int x, int y, int z)
+void Joystick::receiveInput(int number, int x, int y, int z)
 {
 		setAxes(x,y,z);
 
-		for (int i=0; i < ACTIONS_TOTAL; ++i)
-		{
-			//testa se cada um dos botões mapeados foi apertado
-				if (__buttons[buttonMapping[i]] & mask)
-					currentActions[i] = true;
-				else
-					currentActions[i] = false;
-		}
+		buttonInput(number,1);
+}
+
+void Joystick::buttonInput(int number, int pressed)
+{
+	currentActions[number] = pressed;	
+}
+
+void Joystick::axisInput(int x, int y, int z)
+{
+	setAxes(x,y,z);
 }
 
 bool Joystick::keyPressed()
