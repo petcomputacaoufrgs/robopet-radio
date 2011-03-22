@@ -59,7 +59,11 @@ class Joystick {
 			void configureButtons();
 			void mapButton(int action, int button);
 			void printStatus();
-			void receiveInput(int mask, int x, int y, int z);
+
+			void receiveInput(int number, int x, int y, int z);
+			void buttonInput(int number, int pressed);
+			void axisInput(int x, int y, int z);
+
 			bool keyPressed();
 			bool axesMoved();
 
@@ -67,6 +71,7 @@ class Joystick {
 			bool isPressed(int button);
 			vector<bool> getButtonsPressed();
 			vector<int> getAll();
+
 			//getters
 			int getX();
 			int getY();

@@ -174,16 +174,32 @@ int amain(int argc, char** argv) {
 
 			if (msg.type == JS_EVENT_BUTTON) { // seems to be a key press
 				
-				// up, down
-				JoystickFunc( 1 << msg.number , 0,0,0);
+				global_joy.buttonInput(msg.number, msg.value);
+		
 			}
 			
 			if (msg.type == JS_EVENT_AXIS) {
-				//treat axis
+				// msg.value == 0 is x axis
+				// msg.value == 1 is y axis
+				// they must be set separtly, for example the vector (1,1) would
+				// receive two events
+
+				// look here http://www.mjmwired.net/kernel/Documentation/input/joystick-api.txt to find the (x,y) vector value domain
+				global_joy.axisInput(0,0,0);
+				dump_event(msg);
+				
 			}
 
-			//dump_event(msg);
+			
 		}
+
+#if 0
+		vector<bool> buttons = global_joy.getButtonsPressed();
+		for(unsigned int i = 0; i < buttons.size(); ++i)
+			cout << buttons[i] << " | ";
+		cout << endl;
+		global_joy.printStatus();
+#endif
 	}
 
 	return 0;
