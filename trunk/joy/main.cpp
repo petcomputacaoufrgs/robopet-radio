@@ -173,10 +173,16 @@ int amain(int argc, char** argv) {
 		if (len == sizeof(msg)) { //read was succesfull
 
 			if (msg.type == JS_EVENT_BUTTON) { // seems to be a key press
+				
+				// up, down
 				JoystickFunc( 1 << msg.number , 0,0,0);
-				//dump_event(msg);
+			}
+			
+			if (msg.type == JS_EVENT_AXIS) {
+				//treat axis
 			}
 
+			//dump_event(msg);
 		}
 	}
 
