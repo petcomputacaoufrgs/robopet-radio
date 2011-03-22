@@ -1,6 +1,6 @@
 CC = g++
 CFLAGS = -Wall
-GLUTFLAGS = -lglut -lGL -lGLU -lX11 -lm
+GLUTFLAGS = #-lglut -lGL -lGLU -lX11 -lm
 
 INCLUDE_PATHS = -I$(ROBOPET_PATH) -I$(COMMUNICATION_H) -I$(SOCKETS_PATH)
 
@@ -24,3 +24,4 @@ joy: main.cpp $(OBJECTS) $(ROBOPET_LIB) $(COMMUNICATION_LIB)
 
 %.o: %.cpp %.h
 	$(CC) -c -o $@ $< $(CFLAGS)
+

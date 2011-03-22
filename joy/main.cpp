@@ -164,11 +164,11 @@ int amain(int argc, char** argv) {
 
 		if (len == sizeof(msg)) { //read was succesfull
 
-			if (msg.type == JS_EVENT_BUTTON) { // seems to be a key press		
+			if (msg.type == JS_EVENT_BUTTON) { // seems to be a key press
 				JoystickFunc(msg.value,0,0,0);
 			}
 
-		} 
+		}
 	}
 
 	return 0;
@@ -183,8 +183,10 @@ int main(int argc, char **argv)
 
     joyToRadio.open();
 
-
     SetupRC();
+
+    amain(argc,argv);
 
     return 0;
 }
+
