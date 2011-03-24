@@ -42,16 +42,6 @@ void SetupRC(void)
 	}
 }
 
-void dump_event(struct js_event e) {
-
-	printf("----\n");
-	printf("time: %d\n", e.time);
-	printf("value: %s\n", e.value == 1 ? "DOWN" : "UP" );
-	printf("type: %d\n", e.type);
-	printf("number: %d\n", e.number);
-
-}
-
 void sendToRadio() {
 
     RoboPET_WrapperPacket packet;
@@ -168,38 +158,45 @@ int amain(int argc, char** argv) {
 	int fd = openDevice( "/dev/input/js0" );
 
 	while(1) {
+
 		len = read(fd, &msg, sizeof(msg));
 
 		if (len == sizeof(msg)) { //read was succesfull
 
 			if (msg.type == JS_EVENT_BUTTON) { // seems to be a key press
-				
+
 				global_joy.buttonInput(msg.number, msg.value);
-		
+
 			}
-			
+
 			if (msg.type == JS_EVENT_AXIS) {
-				// msg.value == 0 is x axis
-				// msg.value == 1 is y axis
-				// they must be set separtly, for example the vector (1,1) would
-				// receive two events
+				if (msg.number == 0) { // x axis
+					global_joy.setX(msg.value);
+				}
 
-				// look here http://www.mjmwired.net/kernel/Documentation/input/joystick-api.txt to find the (x,y) vector value domain
-				global_joy.axisInput(0,0,0);
-				dump_event(msg);
-				
+				if (msg.number == 1) { // y axis
+					global_joy.setY(msg.value);
+				}
+
+				if (msg.number == 2) { // z axis
+					global_joy.setZ(msg.value);
+				}
+
+//				dump_event(msg);
+
 			}
 
-			
+
+			system("clear");
+			vector<bool> buttons = global_joy.getButtonsPressed();
+			for(unsigned int i = 0; i < buttons.size(); ++i)
+				cout << buttons[i] << " | ";
+			cout << endl;
+			global_joy.printStatus();
+
+
 		}
 
-#if 0
-		vector<bool> buttons = global_joy.getButtonsPressed();
-		for(unsigned int i = 0; i < buttons.size(); ++i)
-			cout << buttons[i] << " | ";
-		cout << endl;
-		global_joy.printStatus();
-#endif
 	}
 
 	return 0;
