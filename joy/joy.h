@@ -20,8 +20,6 @@ enum {
 		BUTTONS_TOTAL
 };
 
-static volatile int __buttons[BUTTONS_TOTAL] = { 1, 2, 4, 8, 16, 32, 64, 128, 256,512};
-
 static string buttonStrings[BUTTONS_TOTAL] = { "BUTTON_1","BUTTON_2","BUTTON_3",
 											 "BUTTON_4","BUTTON_5","BUTTON_6",
 							 				 "BUTTON_7","BUTTON_8","BUTTON_9",
@@ -33,7 +31,6 @@ enum {
 		CHIP_KICK,
 		TATSUMAKI_SENPUU_KYAKU,
 		DEC_BOT,
-
 		DEC_FORCE,
 		INC_BOT,
 		INC_FORCE,
@@ -60,7 +57,6 @@ class Joystick {
 			void mapButton(int action, int button);
 			void printStatus();
 
-			void receiveInput(int number, int x, int y, int z);
 			void buttonInput(int number, int pressed);
 			void axisInput(int x, int y, int z);
 
@@ -83,6 +79,8 @@ class Joystick {
 			void setY(int newy);
 			void setZ(int newz);
 
+			void setRange(int start,int end);
+
 		private:
 			string name;
 			int x,y,z;
@@ -92,7 +90,6 @@ class Joystick {
 			//array das ações atuais;
 			bool currentActions[ACTIONS_TOTAL];
 
-
 			//Métodos Privados
 			//retorna o índice de uma ação dada como uma string
 			int getActionIndex(string action);
@@ -100,7 +97,8 @@ class Joystick {
 			int getButtonIndex(string button);
 
 			void printActions();
-			void setAxes(int x, int y, int z);
+
+			int rangeStart, rangeEnd;
 
 };
 

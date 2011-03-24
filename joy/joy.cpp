@@ -3,6 +3,13 @@
 Joystick::Joystick()
 {
 		name = DEFAULT_JOY;
+		x = 0;
+		y = 0;
+		z = 0;
+
+		for (int i=0; i<ACTIONS_TOTAL; i++) {
+			currentActions[i] = false;
+		}
 }
 
 Joystick::Joystick(string joyname)
@@ -63,21 +70,16 @@ void Joystick::printStatus()
 		printActions();
 }
 
-void Joystick::receiveInput(int number, int x, int y, int z)
-{
-		setAxes(x,y,z);
-
-		buttonInput(number,1);
-}
-
 void Joystick::buttonInput(int number, int pressed)
 {
-	currentActions[number] = pressed;	
+	currentActions[number] = pressed;
 }
 
 void Joystick::axisInput(int x, int y, int z)
 {
-	setAxes(x,y,z);
+	setX(x);
+	setY(y);
+	setZ(z);
 }
 
 bool Joystick::keyPressed()
@@ -167,11 +169,10 @@ void Joystick::setY(int newy) {	y = -newy; } //porque a glut (escorpiões!!) inv
 
 void Joystick::setZ(int newz) {	z = newz; }
 
-void Joystick::setAxes(int newx, int newy, int newz)
+void Joystick::setRange(int start, int end)
 {
-		x = newx;
-		y = -newy; //porque a glut (escorpiões!!) inverte o y
-		z = newz;
+	rangeStart = start;
+	rangeEnd = end;
 }
 
 /*************************
