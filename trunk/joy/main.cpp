@@ -35,7 +35,8 @@ void sendToRadio(Joystick &joy) {
 
 	RP::Vector disp(joy.getX(), joy.getY());
 
-    float disp_theta = 127 * joy.getZ()/1000;
+    //float disp_theta = 127 * joy.getZ()/1000;
+	float disp_theta = 127 * ((float)joy.getZ()/((int)(1<<15)-1));
 
     //this crazy test is for us to determine we are pressing or not the direction button in the joystick
 	//if not, we don't move the bot
@@ -47,6 +48,8 @@ void sendToRadio(Joystick &joy) {
     r->set_displacement_x(disp.getX());
     r->set_displacement_y(disp.getY());
     r->set_displacement_theta(disp_theta);
+    cout << "displacements:" << disp.getX() << "," << disp.getY() << endl;
+    cout << "theta:" << disp_theta << endl;
 
 	r->set_kick(joy.isPressed(KICK));
     r->set_drible(joy.isPressed(DRIBBLE));

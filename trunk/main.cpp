@@ -184,8 +184,8 @@ void calcForces(int robotIndex) {
 
 		for(int i = 0; i < 3; i++) {
 			robots[robotIndex].motorForces[i] =
-				((cosins[i] / major) * (MAX_FORCE*3/10) -
-				(robots[robotIndex].displacement_theta /2));
+				((cosins[i] / major) * (MAX_FORCE*40/100) -
+				(robots[robotIndex].displacement_theta /4));
 		}
 
 }
