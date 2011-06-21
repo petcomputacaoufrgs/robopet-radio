@@ -28,6 +28,7 @@ typedef struct
 	int secret_attack;
 } Robot;
 
+void sendToSim();
 void sendToTracker();
 void sendToRobots(bool toRadio);
 void sendToSimulator();
@@ -123,7 +124,7 @@ void send()
 {
 
 	//sendToTracker();
-	//sendToSim();
+	sendToSim();
 	sendToRobots(real_radio);
 }
 
@@ -255,9 +256,9 @@ void sendToRobots(bool toRadio)
 void initialize()
 {
 
-    radio = RadioUSB(real_radio);
+    //radio = RadioUSB(real_radio);
 
-    radio.usbInitializeDevice();
+    //radio.usbInitializeDevice();
 
 	aitoradio.open(false);
 	joytoradio.open(false);
