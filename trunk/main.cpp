@@ -318,14 +318,10 @@ int main(int argc, char **argv)
 	clrscr();
 	int scrCount = 0;
 	while(!kbhit()) {
-	    scrCount++;
-	    if(scrCount == SCR_CLEAR_DELAY) {
-	        scrCount = 0;
-	        clrscr();
-	    }
-		rewindscr();
+		system("clear");
 		receive();
 		send();
+		usleep(10000);
 	}
 
     while(1) {
@@ -377,7 +373,7 @@ void receiveFromAI() {
 			robots[i].current_theta = packet.aitoradio().robots(i).current_theta();
 
 			if(DEBUG)
-				printf("RECEIVE Robot %d: <%f,%f,%f> (%f degrees) (Kick = %d) (Drible = %d) (Chip Kick = %d)\n", robots[i].id, robots[i].force_x, robots[i].force_y, robots[i].current_theta, robots[i].displacement_theta, robots[i].kick, robots[i].drible, robots[i].chip_kick);
+				printf("RECEIVED Robot %d: <%f,%f,%f> (%f degrees) (Kick = %d) (Drible = %d) (Chip Kick = %d)\n", robots[i].id, robots[i].force_x, robots[i].force_y, robots[i].current_theta, robots[i].displacement_theta, robots[i].kick, robots[i].drible, robots[i].chip_kick);
 		}
 	}
 	else
