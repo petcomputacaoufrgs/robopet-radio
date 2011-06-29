@@ -52,11 +52,11 @@ bool real_radio = true;
 int CLOCK_WISE_VELOCITY = 15,
     COUNTER_CLOCK_WISE_VELOCITY = 16,
     MIN_DIFF = 30,
-	MAX_FORCE = 80;
+	MAX_FORCE = 127;
 
 bool DEBUG = true;
 int robot_total = NUM_ROBOTS;
-int team_id;
+int team_id = 0;
 
 Robot robots[NUM_ROBOTS];
 //angles bangulo entre frente do robo e eixos dos motores, constantes;
@@ -122,7 +122,6 @@ void giraAnda(int robotIndex)
 
 void send()
 {
-
 	//sendToTracker();
 	sendToSim();
 	sendToRobots(real_radio);
@@ -162,7 +161,7 @@ void calcForces(int robotIndex) {
 
 	float phi = normal.angleCWDegrees(desl);
 
-	printf("Phi: %f\n", phi);
+	//printf("Phi: %f\n", phi);
 
 		float major = FLT_MIN;
 		float cosins[3] = {0,0,0};
@@ -217,8 +216,7 @@ void sendToRobots(bool toRadio)
 		for(int k = 0; k < 3; k++)
 			robots[i].motorForces[k] = MAX_FORCE;
 
-		if(DEBUG)
-		{
+		if(DEBUG) {
 			printf("SENDING Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d) (Chip Kick = %d)\n",
 			robots[i].id,
 			robots[i].force_x,
@@ -256,9 +254,10 @@ void sendToRobots(bool toRadio)
 void initialize()
 {
 
-    //radio = RadioUSB(real_radio);
-
-    //radio.usbInitializeDevice();
+    if(real_radio) {
+		radio = RadioUSB(real_radio);
+		radio.usbInitializeDevice();
+	}
 
 	aitoradio.open(false);
 	joytoradio.open(false);
@@ -274,30 +273,43 @@ void parseOptions(int argc, char **argv)
 {
 	char ch;
 
-	while((ch = getopt(argc, argv, "jdDt:n:i:p:")) != EOF) {
+	while((ch = getopt(argc, argv, "hqt:n:dm:")) != EOF) {
+		
 		switch(ch) {
+			case 'h':
+				// Be sure that this print is updated with all options from this 'switch'.
+				printf("Command line options:\n");
+				printf(" -q\t\t No on-screen messages. (default=%s\n", (!DEBUG)?"true":"false");
+				printf(" -t [int]\t Manually set the team id (default=%i)\n",team_id);
+				printf(" -n [int]\t Manually set total of robots (default=%i)\n",NUM_ROBOTS);
+				printf(" -d\t\t Don't try to open USB Radio connection.\n");
+				printf(" -m [int]\t Manually set max force sent to motors(default=%i).\n",MAX_FORCE);
+				break;
+				
+			case 'q':
+				DEBUG = false;
+				printf("Quiet Mode ON.\n");
+				break;
 
-			case 'j': //abre sock do joy
-			break;
+			case 't':
+				team_id = atoi(optarg);
+				printf("Team ID = %i\n", team_id);
+				break;
 
-			case 'D': DEBUG = true;
-			break;
+			case 'n':
+				robot_total = atoi(optarg);
+				printf("Total of robots = %i\n)", robot_total);
+				break;
 
-			case 't': team_id = atoi(optarg);
-			break;
-
-			case 'n': robot_total = atoi(optarg);
-			break;
-
-			case 'd': real_radio = false;
-			break;
-
-//			in the future set the ip and port of the sockets if it makes sense
-//			case 'i': hostname = optarg;
-//			break;
-
-//			case 'p': port = atoi(optarg);
-//			break;
+			case 'd':
+				real_radio = false;
+				printf("Simulated Radio mode.\n");
+				break;
+			
+			case 'm':
+				MAX_FORCE = atoi(optarg);
+				printf("Max Motors Force = %i\n", MAX_FORCE);
+				break;
 		}
 	}
 
@@ -313,19 +325,20 @@ int main(int argc, char **argv)
 
 	parseOptions(argc,argv);
 
-	initialize( );
+	initialize();
 
-	clrscr();
-	int scrCount = 0;
 	while(!kbhit()) {
 		system("clear");
 		receive();
 		send();
 		usleep(10000);
 	}
+	
+	if(real_radio)
+		radio.usbClosingDevice();
 
     while(1) {
-        printf("mandando os robos pararem ...\n");
+        printf("Panic Mode Activated! Stopping all robots...\n");
 	    for(int i = 0; i < robot_total; i++)
 	    {
 			for(int j = 0; j < 3; j++)
@@ -335,9 +348,6 @@ int main(int argc, char **argv)
 				sendToRobots(real_radio);
 	    }
 	}
-
-	if(real_radio)
-		radio.usbClosingDevice();
 }
 
 
@@ -352,8 +362,10 @@ void receiveFromAI() {
 
 	RoboPET_WrapperPacket packet;
 	if (aitoradio.receive(packet) && packet.has_aitoradio()) {
-		printf("----------------------------");
-		printf("Received AI-To-Radio!\n");
+		if(DEBUG) {
+			printf("----------------------------");
+			printf("Received AI-To-Radio!\n");
+		}
 
 		robot_total = packet.aitoradio().robots_size();
 
@@ -372,12 +384,11 @@ void receiveFromAI() {
 			robots[i].id = packet.aitoradio().robots(i).id();
 			robots[i].current_theta = packet.aitoradio().robots(i).current_theta();
 
-			if(DEBUG)
-				printf("RECEIVED Robot %d: <%f,%f,%f> (%f degrees) (Kick = %d) (Drible = %d) (Chip Kick = %d)\n", robots[i].id, robots[i].force_x, robots[i].force_y, robots[i].current_theta, robots[i].displacement_theta, robots[i].kick, robots[i].drible, robots[i].chip_kick);
+			if(DEBUG) printf("RECEIVED Robot %d: <%f,%f,%f> (%f degrees) (Kick = %d) (Drible = %d) (Chip Kick = %d)\n", robots[i].id, robots[i].force_x, robots[i].force_y, robots[i].current_theta, robots[i].displacement_theta, robots[i].kick, robots[i].drible, robots[i].chip_kick);
 		}
 	}
 	else
-		printf("Didn't receive  AI-To-Radio.\n");
+		if(DEBUG) printf("Didn't receive  AI-To-Radio.\n");
 }
 
 void receiveFromJoy() {
@@ -385,8 +396,10 @@ void receiveFromJoy() {
 	RoboPET_WrapperPacket packet;
 	if(joytoradio.receive(packet) && packet.has_joytoradio()) {
 
-		printf("----------------------------");
-		printf("Received Joy-To-Radio!\n");
+		if(DEBUG) {
+			printf("----------------------------");
+			printf("Received Joy-To-Radio!\n");
+		}
 
 		AIToRadio aitoradio = packet.joytoradio().aitoradio();
 		robot_total = aitoradio.robots_size();
@@ -455,13 +468,13 @@ void sendToSim()
 		r->set_drible( robots[i].drible );
 		r->set_id( robots[i].id );
 
-		printf("SENT Robot %d: forceVector<%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", robots[i].id, robots[i].force_x,
+		if(DEBUG) printf("SENT Robot %d: forceVector<%f, %f> (%f degrees) (Kick = %d) (Drible = %d)\n", robots[i].id, robots[i].force_x,
 																							robots[i].force_y, robots[i].displacement_theta,
 																							robots[i].kick, robots[i].drible);
 	}
 
 	radiotosim.send(packet);
-	printf("Sent Radio-To-Simulator\n");
+	if(DEBUG) printf("Sent Radio-To-Simulator\n");
 }
 
 
