@@ -369,6 +369,8 @@ void receiveFromAI() {
 
 		robot_total = packet.aitoradio().robots_size();
 
+		team_id = packet.aitoradio().team_id();
+
 		//GAMBIARRA PARA DEIXAR ECP FELIZ
 		if (robot_total < 0)
 			robot_total = NUM_ROBOTS;
