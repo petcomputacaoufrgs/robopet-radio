@@ -9,8 +9,10 @@
 #include "rp_server.h"
 #include "radio_usb.h"
 #include "vector.h"
+#include "utils.h"
 
-#define NUM_ROBOTS 			5
+
+#define NUM_ROBOTS 			MAX_PLAYERS
 #define WRITE_BYTE_NUMBER	5*NUM_ROBOTS
 #define SLEEP_TIME 			7250*5
 
@@ -30,7 +32,7 @@ typedef struct
 
 void sendToSim();
 void sendToTracker();
-void sendToRobots(bool toRadio);
+void sendToRobots();
 void sendToSimulator();
 
 void receive();
@@ -124,7 +126,7 @@ void send()
 {
 	//sendToTracker();
 	sendToSim();
-	sendToRobots(real_radio);
+	if(real_radio) sendToRobots();
 }
 
 void applyAdjustments(int robotIndex) {
@@ -190,7 +192,7 @@ void calcForces(int robotIndex) {
 
 }
 
-void sendToRobots(bool toRadio)
+void sendToRobots()
 {
 	/*
 	0000 0000 (0%) - 1111 1111 (100%) - 1000 0000 (50%)
@@ -243,10 +245,8 @@ void sendToRobots(bool toRadio)
 
 	}
 
-	if(toRadio) {
-		radio.usbSendData( data_send, WRITE_BYTE_NUMBER );
-		//usleep(SLEEP_TIME);
-	}
+	radio.usbSendData( data_send, WRITE_BYTE_NUMBER );
+	//usleep(SLEEP_TIME);
 
 }
 
@@ -284,7 +284,7 @@ void parseOptions(int argc, char **argv)
 				printf(" -n [int]\t Manually set total of robots (default=%i)\n",NUM_ROBOTS);
 				printf(" -d\t\t Don't try to open USB Radio connection.\n");
 				printf(" -m [int]\t Manually set max force sent to motors(default=%i).\n",MAX_FORCE);
-				break;
+				exit(0);
 				
 			case 'q':
 				DEBUG = false;
@@ -344,8 +344,9 @@ int main(int argc, char **argv)
 			for(int j = 0; j < 3; j++)
 				robots[i].motorForces[j] = 0;
 
-            for(int k = 0; k < 1000; k++)
-				sendToRobots(real_radio);
+            if(real_radio)
+				for(int k = 0; k < 1000; k++)
+					sendToRobots();
 	    }
 	}
 }
