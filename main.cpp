@@ -328,7 +328,8 @@ int main(int argc, char **argv)
 	initialize();
 
 	while(!kbhit()) {
-		system("clear");
+		if(DEBUG)
+			system("clear");
 		receive();
 		send();
 		usleep(10000);
@@ -438,7 +439,8 @@ void receiveFromJoy() {
 
 	}
 	else
-		printf("Didn't receive  Joy-To-Radio.\n");
+		if(DEBUG)
+			printf("Didn't receive  Joy-To-Radio.\n");
 }
 
 
