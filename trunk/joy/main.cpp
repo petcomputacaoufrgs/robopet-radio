@@ -129,7 +129,8 @@ int openDevice(const char* device) {
 
 void printStatus(Joystick &joy)
 {
-	system("clear");
+	if(DEBUG)
+		system("clear");
 	vector<bool> buttons = joy.getButtonsPressed();
 	for(unsigned int i = 0; i < buttons.size(); ++i)
 		cout << buttons[i] << " | ";
