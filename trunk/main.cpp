@@ -13,8 +13,8 @@
 
 
 #define NUM_ROBOTS 			MAX_PLAYERS
-#define WRITE_BYTE_NUMBER	5*NUM_ROBOTS
-#define SLEEP_TIME 			7250*5
+#define WRITE_BYTE_NUMBER	6*NUM_ROBOTS
+#define SLEEP_TIME 			7250*6
 
 typedef struct
 {
@@ -32,13 +32,14 @@ typedef struct
 
 void sendToSim();
 void sendToTracker();
-void sendToRobots();
+void sendToRobots(int panic=0);
 void sendToSimulator();
 
 void receive();
 void receiveFromAI();
 void receiveFromJoy();
 int kbhit();
+int inverteBitCBR2011(int f);
 
 
 
@@ -62,10 +63,12 @@ int team_id = 0;
 
 Robot robots[NUM_ROBOTS];
 //angles bangulo entre frente do robo e eixos dos motores, constantes;
-const int theta[] = {60,180,-60};
+const int theta[] = {60,180,-60,0};
+//const int theta[] = {-57,57,135,225};
+
 RadioUSB radio;
 
-int forceAdjustment[5][3] = {{0}};
+int forceAdjustment[5][4] = {{0}};
 
 // >>> END OF GLOBALS
 
@@ -131,7 +134,7 @@ void send()
 
 void applyAdjustments(int robotIndex) {
 
-	for(int i = 0; i < 3; i++)
+	for(int i = 0; i < 4; i++)
 		if(robots[robotIndex].motorForces[i] != 0) {
 			if(robots[robotIndex].motorForces[i] > 0)
 				robots[robotIndex].motorForces[i] += forceAdjustment[robotIndex][i];
@@ -163,10 +166,10 @@ void calcForces(int robotIndex) {
 
 	float phi = normal.angleCWDegrees(desl);
 
-	//printf("Phi: %f\n", phi);
+	printf("Phi: %f\n", phi);
 
 		float major = FLT_MIN;
-		float cosins[3] = {0,0,0};
+		float cosins[4] = {0,0,0,0};
 
 		//if we just want to rotate the robot, we clear the cosins in order to
 		//make the robot rotate -> (cosins[i] / major) == 0!
@@ -189,10 +192,35 @@ void calcForces(int robotIndex) {
 				((cosins[i] / major) * (MAX_FORCE*40/100) -
 				(robots[robotIndex].displacement_theta /4));
 		}
+		//teste do motor 4
+		robots[robotIndex].motorForces[3] = 85;
+		
+		//calculando para 4 motores
+	/*	if ((desl.getX() == 0) && (desl.getY() == 0)) {
+			major = 1;
+			for(int i = 0; i < 4; i++) {
+				cosins[i] = 0;
+			}
+		}
+		else {
+			for(int i = 0; i < 4; i++) {
+				cosins[i] = cos((theta[i] + phi + 90)*RP::PI/180);
+				if(abs(cosins[i]) > major)
+					major = abs(cosins[i]);
+			}
+		}
+
+		for(int i = 0; i < 4; i++) {
+			robots[robotIndex].motorForces[i] =
+				((cosins[i] / major) * (MAX_FORCE*40/100) -
+				(robots[robotIndex].displacement_theta /4));
+		}*/
+		
+		
 
 }
 
-void sendToRobots()
+void sendToRobots(int panic)
 {
 	/*
 	0000 0000 (0%) - 1111 1111 (100%) - 1000 0000 (50%)
@@ -200,7 +228,8 @@ void sendToRobots()
 	byte 2: força motor
 	byte 3: força motor
 	byte 4: força motor
-	byte 5: chute
+	byte 5: força motor
+	byte 6: chute
 	*/
 
 	//Initializes the data to be send for the robot with index i
@@ -209,40 +238,63 @@ void sendToRobots()
 
 	for(int i=0; i < robot_total; i+=1)
 	{
-	    //giraAnda(i);
-	    calcForces(i);
+		if(!panic)
+		{
+			//giraAnda(i);
+			calcForces(i);
 
-	    applyAdjustments(i);
+			applyAdjustments(i);
 
-	    if(robots[i].secret_attack)
-		for(int k = 0; k < 3; k++)
-			robots[i].motorForces[k] = MAX_FORCE;
-
+			if(robots[i].secret_attack)
+				for(int k = 0; k < 4; k++)
+					robots[i].motorForces[k] = MAX_FORCE;
+		}
 		if(DEBUG) {
 			printf("SENDING Robot %d: <%f, %f> (%f degrees) (Kick = %d) (Drible = %d) (Chip Kick = %d)\n",
 			robots[i].id,
 			robots[i].force_x,
-			robots[i].force_y, robots[i].displacement_theta,
-			robots[i].kick, robots[i].drible,
+			robots[i].force_y, 
+			robots[i].displacement_theta,
+			robots[i].kick, 
+			robots[i].drible,
 			robots[i].chip_kick);
 
 //			for(int j=0; j<3; j++)
 //				printf("adjustement(%d): %d - ", j, forceAdjustment[i][j]);
 //			printf("\n");
 
-			for(int j=0; j<3; j++) {
+			for(int j=0; j<4; j++) {
 				printf("motor(%d): %d(%d) - ", j, realForce(robots[i].motorForces[j]), robots[i].motorForces[j]);
 			}
 
 			printf("\n");
 		}
 
+
 		data_send[i*NUM_ROBOTS    ] = robots[i].id+11;
-		data_send[i*NUM_ROBOTS + 1] = realForce(robots[i].motorForces[0]);
+/*		data_send[i*NUM_ROBOTS + 1] = realForce(robots[i].motorForces[0]);
 		data_send[i*NUM_ROBOTS + 2] = realForce(robots[i].motorForces[1]);
 		data_send[i*NUM_ROBOTS + 3] = realForce(robots[i].motorForces[2]);
-		data_send[i*NUM_ROBOTS + 4] = robots[i].kick;
+		data_send[i*NUM_ROBOTS + 4] = realForce(robots[i].motorForces[3]);		
+		
+		
+		data_send[i*NUM_ROBOTS + 1] = inverteBitCBR2011(realForce(robots[i].motorForces[0]));
+		data_send[i*NUM_ROBOTS + 2] = inverteBitCBR2011(realForce(robots[i].motorForces[1]));
+		data_send[i*NUM_ROBOTS + 3] = inverteBitCBR2011(realForce(robots[i].motorForces[2]));
+		data_send[i*NUM_ROBOTS + 4] = inverteBitCBR2011(realForce(robots[i].motorForces[3]));
+*/
+int mandando = 60;
+		data_send[i*NUM_ROBOTS + 1] = inverteBitCBR2011(mandando);
+		data_send[i*NUM_ROBOTS + 2] = inverteBitCBR2011(mandando);
+		data_send[i*NUM_ROBOTS + 3] = inverteBitCBR2011(mandando);
+		data_send[i*NUM_ROBOTS + 4] = inverteBitCBR2011(mandando);
+		
+		data_send[i*NUM_ROBOTS + 5] = robots[i].kick;
+		
+		//printf("bit invertido: %d \n", inverteBitCBR2011(mandando));
 
+	
+	
 	}
 
 	radio.usbSendData( data_send, WRITE_BYTE_NUMBER );
@@ -250,7 +302,35 @@ void sendToRobots()
 
 }
 
-
+int inverteBitCBR2011(int f)
+{//gambiarra master, ecp's fizeram uma placa ao contrario, isso corrige
+	int v[8], aux = 0 ,out = 0;
+	
+	aux = f;
+	v[0] = aux%2;
+	aux /= 2;
+	v[1] = aux%2;
+	aux /= 2;
+	v[2] = aux%2;
+	aux /= 2;
+	v[3] = aux%2;
+	aux /= 2;
+	v[4] = aux%2;
+	aux /= 2;
+	v[5] = aux%2;
+	aux /= 2;
+	v[6] = aux%2;
+	aux /= 2;
+	v[7] = aux%2;
+	aux /= 2;
+	v[8] = aux%2;
+	
+	for(int i=8; i>0; i--)
+		out += v[8-i]*pow(2,i-1);
+		
+		return out;
+	
+}
 void initialize()
 {
 
@@ -338,18 +418,21 @@ int main(int argc, char **argv)
 	if(real_radio)
 		radio.usbClosingDevice();
 
-    while(1) {
+      //  while(1) {
         printf("Panic Mode Activated! Stopping all robots...\n");
 	    for(int i = 0; i < robot_total; i++)
 	    {
-			for(int j = 0; j < 3; j++)
+			for(int j = 0; j < 4; j++)
 				robots[i].motorForces[j] = 0;
 
             if(real_radio)
-				for(int k = 0; k < 1000; k++)
-					sendToRobots();
+			//	for(int k = 0; k < 1000; k++)
+					sendToRobots(1);
 	    }
-	}
+//	}
+	
+		if(real_radio)
+		radio.usbClosingDevice();
 }
 
 
