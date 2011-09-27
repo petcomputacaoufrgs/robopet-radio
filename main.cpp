@@ -272,23 +272,23 @@ void sendToRobots(int panic)
 
 
 		data_send[i*NUM_ROBOTS    ] = robots[i].id+11;
-/*		data_send[i*NUM_ROBOTS + 1] = realForce(robots[i].motorForces[0]);
+		data_send[i*NUM_ROBOTS + 1] = realForce(robots[i].motorForces[0]);
 		data_send[i*NUM_ROBOTS + 2] = realForce(robots[i].motorForces[1]);
 		data_send[i*NUM_ROBOTS + 3] = realForce(robots[i].motorForces[2]);
 		data_send[i*NUM_ROBOTS + 4] = realForce(robots[i].motorForces[3]);		
 		
-		
+/*			
 		data_send[i*NUM_ROBOTS + 1] = inverteBitCBR2011(realForce(robots[i].motorForces[0]));
 		data_send[i*NUM_ROBOTS + 2] = inverteBitCBR2011(realForce(robots[i].motorForces[1]));
 		data_send[i*NUM_ROBOTS + 3] = inverteBitCBR2011(realForce(robots[i].motorForces[2]));
 		data_send[i*NUM_ROBOTS + 4] = inverteBitCBR2011(realForce(robots[i].motorForces[3]));
-*/
-int mandando = 60;
+
+	int mandando = 60;
 		data_send[i*NUM_ROBOTS + 1] = inverteBitCBR2011(mandando);
 		data_send[i*NUM_ROBOTS + 2] = inverteBitCBR2011(mandando);
 		data_send[i*NUM_ROBOTS + 3] = inverteBitCBR2011(mandando);
 		data_send[i*NUM_ROBOTS + 4] = inverteBitCBR2011(mandando);
-		
+*/	
 		data_send[i*NUM_ROBOTS + 5] = robots[i].kick;
 		
 		//printf("bit invertido: %d \n", inverteBitCBR2011(mandando));
