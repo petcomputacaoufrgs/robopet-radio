@@ -18,6 +18,7 @@
 #define MAX_MOTOR 3
 #define MAX_BOT_INDEX MAX_BOT - 1
 #define MAX_MOTOR_INDEX MAX_MOTOR - 1
+#define DEBUG 1
 
 RoboPETServer joyToRadio(PORT_JOY_TO_RADIO, IP_JOY_TO_RADIO);
 int current_bot = 0;
