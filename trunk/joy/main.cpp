@@ -32,6 +32,8 @@ void sendToRadio(Joystick &joy) {
     JoyToRadio *joytoradioPacket = packet.mutable_joytoradio();
 	AIToRadio *aitoradioPacket = joytoradioPacket->mutable_aitoradio();
 
+	aitoradioPacket->set_team_id(true);
+
     AIToRadio::Robot *r = aitoradioPacket->add_robots();
 
 	RP::Vector disp(joy.getX(), joy.getY());
