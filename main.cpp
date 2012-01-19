@@ -15,6 +15,7 @@
 #define NUM_ROBOTS 			MAX_PLAYERS
 #define WRITE_BYTE_NUMBER	6*NUM_ROBOTS
 #define SLEEP_TIME 			7250*6
+#define NUM_BYTES 6
 
 typedef struct
 {
@@ -173,7 +174,7 @@ void calcForces(int robotIndex) {
 
 		//if we just want to rotate the robot, we clear the cosins in order to
 		//make the robot rotate -> (cosins[i] / major) == 0!
-		if ((desl.getX() == 0) && (desl.getY() == 0)) {
+/*		if ((desl.getX() == 0) && (desl.getY() == 0)) {
 			major = 1;
 			for(int i = 0; i < 3; i++) {
 				cosins[i] = 0;
@@ -194,9 +195,11 @@ void calcForces(int robotIndex) {
 		}
 		//teste do motor 4
 		robots[robotIndex].motorForces[3] = 85;
-		
-		//calculando para 4 motores
-	/*	if ((desl.getX() == 0) && (desl.getY() == 0)) {
+*/		
+
+
+		//calculating for 4 motors
+		if ((desl.getX() == 0) && (desl.getY() == 0)) {
 			major = 1;
 			for(int i = 0; i < 4; i++) {
 				cosins[i] = 0;
@@ -214,7 +217,7 @@ void calcForces(int robotIndex) {
 			robots[robotIndex].motorForces[i] =
 				((cosins[i] / major) * (MAX_FORCE*40/100) -
 				(robots[robotIndex].displacement_theta /4));
-		}*/
+		}
 		
 		
 
@@ -269,37 +272,35 @@ void sendToRobots(int panic)
 
 			printf("\n");
 		}
-
-
-		data_send[i*NUM_ROBOTS    ] = robots[i].id+11;
-		data_send[i*NUM_ROBOTS + 1] = realForce(robots[i].motorForces[0]);
-		data_send[i*NUM_ROBOTS + 2] = realForce(robots[i].motorForces[1]);
-		data_send[i*NUM_ROBOTS + 3] = realForce(robots[i].motorForces[2]);
-		data_send[i*NUM_ROBOTS + 4] = realForce(robots[i].motorForces[3]);		
 		
+
+		data_send[i*NUM_BYTES    ] = robots[i].id+11;
+		data_send[i*NUM_BYTES + 1] = inverteBitCBR2011(realForce(robots[i].motorForces[0]));
+		data_send[i*NUM_BYTES + 2] = inverteBitCBR2011(realForce(robots[i].motorForces[1]));
+		data_send[i*NUM_BYTES + 3] = inverteBitCBR2011(realForce(robots[i].motorForces[2]));
+		data_send[i*NUM_BYTES + 4] = inverteBitCBR2011(realForce(robots[i].motorForces[3]));
+		data_send[i*NUM_BYTES + 5] = robots[i].kick;
 /*			
-		data_send[i*NUM_ROBOTS + 1] = inverteBitCBR2011(realForce(robots[i].motorForces[0]));
-		data_send[i*NUM_ROBOTS + 2] = inverteBitCBR2011(realForce(robots[i].motorForces[1]));
-		data_send[i*NUM_ROBOTS + 3] = inverteBitCBR2011(realForce(robots[i].motorForces[2]));
-		data_send[i*NUM_ROBOTS + 4] = inverteBitCBR2011(realForce(robots[i].motorForces[3]));
 
-	int mandando = 60;
-		data_send[i*NUM_ROBOTS + 1] = inverteBitCBR2011(mandando);
-		data_send[i*NUM_ROBOTS + 2] = inverteBitCBR2011(mandando);
-		data_send[i*NUM_ROBOTS + 3] = inverteBitCBR2011(mandando);
-		data_send[i*NUM_ROBOTS + 4] = inverteBitCBR2011(mandando);
-*/	
-		data_send[i*NUM_ROBOTS + 5] = robots[i].kick;
+
+		data_send[i*NUM_BYTES    ] = robots[i].id+11;
+		data_send[i*NUM_BYTES + 1] = realForce(robots[i].motorForces[0]);
+		data_send[i*NUM_BYTES + 2] = realForce(robots[i].motorForces[1]);
+		data_send[i*NUM_BYTES + 3] = realForce(robots[i].motorForces[2]);
+		data_send[i*NUM_BYTES + 4] = realForce(robots[i].motorForces[3]);		
 		
+	int mandando = 60;
+		data_send[i*NUM_BYTES    ] = robots[i].id+11;
+		data_send[i*NUM_BYTES + 1] = inverteBitCBR2011(mandando);
+		data_send[i*NUM_BYTES + 2] = inverteBitCBR2011(mandando);
+		data_send[i*NUM_BYTES + 3] = inverteBitCBR2011(mandando);
+		data_send[i*NUM_BYTES + 4] = inverteBitCBR2011(mandando);
+*/	
 		//printf("bit invertido: %d \n", inverteBitCBR2011(mandando));
-
-	
-	
 	}
 
 	radio.usbSendData( data_send, WRITE_BYTE_NUMBER );
 	//usleep(SLEEP_TIME);
-
 }
 
 int inverteBitCBR2011(int f)
@@ -328,9 +329,9 @@ int inverteBitCBR2011(int f)
 	for(int i=8; i>0; i--)
 		out += v[8-i]*pow(2,i-1);
 		
-		return out;
-	
+		return out;	
 }
+
 void initialize()
 {
 
